@@ -109,7 +109,6 @@ export class SignalingServer {
                             success: true,
                             message: 'Host initialised ' + ws.uuid,
                             uuid: ws.uuid,
-                            webRtcConfig: this.getRTCConnectionConfig()
                         });
                         break;
                     case 'connect':
