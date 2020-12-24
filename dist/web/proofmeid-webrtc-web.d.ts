@@ -34,7 +34,7 @@ export class WebRtcProvider {
         receivedActions$: BehaviorSubject<any>;
         uuid$: BehaviorSubject<any>;
         websocketConnectionClosed$: BehaviorSubject<any>;
-        websocketConnectionOpen$: BehaviorSubject<boolean>;
+        websocketConnectionOpen$: BehaviorSubject<any>;
         webRtcConnectionConfig: RTCConfiguration;
         constructor();
         /**
@@ -89,6 +89,10 @@ export class WebRtcProvider {
         setupPeerconnection(uuid: string): Promise<void>;
 }
 
+export class ProofmeUtilsProvider {
+    validCredentials(credentialObject: ICredentialObject, web3Url: string): Promise<IValidCredential>;
+}
+
 export interface IRTCConnectionConfig {
     stunEnabled: boolean;
     stunUrl: string;
@@ -101,5 +105,71 @@ export interface IRTCConnectionConfig {
 export interface IWebRTCConfig {
     signalingUrl: string;
     isHost: boolean;
+}
+
+export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string): Promise<{
+    valid: boolean;
+    code: number;
+    message: string;
+}>;
+export function userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
+export function issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
+export function didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
+export function knownAddressesContains(list: any[], sha3Key: string, didContractAddress: string): boolean;
+export function getSha3Key(key: string, web3Node: any): any;
+export function getKeyPurpose(keyManagerContract: any, key: string): Promise<string>;
+export function calculateMinutesDifference(dt2: Date, dt1: Date): number;
+
+export interface IValidCredential {
+    valid: boolean;
+    message: string;
+    code: number;
+}
+
+export interface ICredentialObject {
+    credentials: {
+        [key: string]: ICredential;
+    };
+    proof: IProof;
+}
+
+export interface ICheckedDid {
+    holderKey: string;
+    did: string;
+    result: boolean;
+}
+
+export interface ICredential {
+    credentialSubject: {
+        credential: {
+            type: string;
+            value: string;
+        };
+    };
+    expirationDate: string;
+    id: string;
+    issuanceDate: string;
+    issuer: {
+        authorityId: string;
+        authorityName: string;
+        id: string;
+        name: string;
+    };
+    proof?: {
+        type: string;
+        nonce: number;
+        signature: string;
+        holder: string;
+    };
+    type: string[];
+    verifiedCredential?: boolean;
+    version: string;
+}
+
+export interface IProof {
+    holder: string;
+    nonce: number;
+    type: string;
+    signature?: string;
 }
 

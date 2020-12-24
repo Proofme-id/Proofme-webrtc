@@ -29,7 +29,7 @@ let WebRtcProvider = class WebRtcProvider {
         this.receivedActions$ = new rxjs_1.BehaviorSubject(null); // Whenever an action is received, this observable will emit an event
         this.uuid$ = new rxjs_1.BehaviorSubject(null); // Whenever the UUID is set, it will emit an event (so that the host can set it somewhere in like a QR)
         this.websocketConnectionClosed$ = new rxjs_1.BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
-        this.websocketConnectionOpen$ = new rxjs_1.BehaviorSubject(false); // Whenever there is an event on the websocket, this observable will emit
+        this.websocketConnectionOpen$ = new rxjs_1.BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
     }
     /**
      * Set the config of the WebRTC connection.
@@ -76,9 +76,22 @@ let WebRtcProvider = class WebRtcProvider {
      * Only disconnect on this application and send no disconnect over the data channel
      */
     disconnect() {
+        console.log("Disconnect");
         if (this.peerConnection) {
+            console.log("Peerconnection closed");
             this.peerConnection.close();
         }
+        if (this.dataChannel) {
+            console.log("dataChannel closed");
+            this.dataChannel.close();
+        }
+        if (this.wsClient) {
+            console.log("Websocket closed");
+            this.wsClient.close();
+        }
+        this.peerConnection = null;
+        this.dataChannel = null;
+        this.wsClient = null;
     }
     /**
      * Disconnect on this application and send a disconnect event over the datachannel
@@ -86,9 +99,15 @@ let WebRtcProvider = class WebRtcProvider {
     remoteDisconnect() {
         console.log('datachannel:', this.dataChannel);
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
+            console.log("Data channel sending disconnect");
             this.dataChannel.send(JSON.stringify({ action: 'disconnect' }));
         }
-        this.disconnect();
+        console.log("Waiting 1 second for client disconnect");
+        // TODO: Is one second enough?
+        setTimeout(() => {
+            console.log("Client disconnect");
+            this.disconnect();
+        }, 1000);
     }
     /**
      * The host will send an offer when a client connects to his UUID
@@ -113,6 +132,10 @@ let WebRtcProvider = class WebRtcProvider {
             const RTCSessionDescription = require('wrtc').RTCSessionDescription;
             const RTCIceCandidate = require('wrtc').RTCIceCandidate;
             const W3CWebSocket = require('websocket').w3cwebsocket;
+            this.receivedActions$ = new rxjs_1.BehaviorSubject(null);
+            this.uuid$ = new rxjs_1.BehaviorSubject(null);
+            this.websocketConnectionClosed$ = new rxjs_1.BehaviorSubject(null);
+            this.websocketConnectionOpen$ = new rxjs_1.BehaviorSubject(null);
             let signalingUrl = this.webRtcConfig.signalingUrl;
             if (!signalingUrl) {
                 console.log('signalingUrl undefined, falling back to default');
@@ -153,20 +176,47 @@ let WebRtcProvider = class WebRtcProvider {
                             console.log('Websocket onmessage error: ', message);
                             break;
                         case 'connect':
-                            console.log('Websocket connect event');
                             console.log('Websocket connect success:', success);
                             // When connected to the Signaling service
                             if (success) {
                                 if (this.webRtcConfig.isHost) {
                                     console.log('Websocket connect is host');
-                                    // if the application is the host, send a host request to receive a UUID
-                                    this.wsClient.send(JSON.stringify({ type: 'host' }));
+                                    const maxTries = 500;
+                                    let tries = 0;
+                                    const interval = setInterval(() => {
+                                        if (!this.wsClient) {
+                                            clearInterval(interval);
+                                        }
+                                        if (this.wsClient && this.wsClient.readyState === 1 && tries < maxTries) {
+                                            clearInterval(interval);
+                                            // if the application is the host, send a host request to receive a UUID
+                                            this.wsClient.send(JSON.stringify({ type: 'host' }));
+                                        }
+                                        if (tries >= maxTries) {
+                                            clearInterval(interval);
+                                        }
+                                        tries++;
+                                    }, 50);
                                 }
                                 else {
                                     console.log('Websocket connect is not host');
-                                    // If the application is not the host, send a connect request with the host UUID
-                                    yield this.setupPeerconnection(this.hostUuid);
-                                    this.wsClient.send(JSON.stringify({ type: 'connect', host: this.hostUuid }));
+                                    const maxTries = 500;
+                                    let tries = 0;
+                                    const interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
+                                        if (!this.wsClient) {
+                                            clearInterval(interval);
+                                        }
+                                        if (this.wsClient && this.wsClient.readyState === 1 && tries < maxTries) {
+                                            clearInterval(interval);
+                                            yield this.setupPeerconnection(this.hostUuid);
+                                            // If the application is not the host, send a connect request with the host UUID
+                                            this.wsClient.send(JSON.stringify({ type: 'connect', host: this.hostUuid }));
+                                        }
+                                        if (tries >= maxTries) {
+                                            clearInterval(interval);
+                                        }
+                                        tries++;
+                                    }), 50);
                                 }
                             }
                             else {
@@ -188,6 +238,7 @@ let WebRtcProvider = class WebRtcProvider {
                             // If the application is not the host, it receives an offer whenever a client connects.
                             // The client will send an answer back
                             console.log("Received offer");
+                            console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                             if (offer && !this.webRtcConfig.isHost) {
                                 yield this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
                                 const hostAnswer = yield this.peerConnection.createAnswer();
@@ -209,12 +260,13 @@ let WebRtcProvider = class WebRtcProvider {
                             break;
                         case 'leave':
                             // Whenever the host or client leaves setup a new connection
-                            console.log('Websocket onmessage leave host uuid: ' + uuid);
+                            console.log('Websocket onmessage leave host');
                             this.setUuid(null);
-                            yield this.setupPeerconnection(uuid);
+                            this.disconnect();
                             break;
                         case 'answer':
                             console.log("Received answer");
+                            console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                             // The client will send an answer and the host will set it as a description
                             if (answer && this.webRtcConfig.isHost) {
                                 yield this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
@@ -246,7 +298,7 @@ let WebRtcProvider = class WebRtcProvider {
     setupPeerconnection(uuid) {
         return __awaiter(this, void 0, void 0, function* () {
             this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
-            console.log('settings up peerconnection with uuid:', uuid);
+            console.log('setting up peerconnection with uuid:', uuid);
             this.dataChannel = this.peerConnection.createDataChannel(uuid);
             this.peerConnection.addEventListener('datachannel', event => {
                 event.channel.onmessage = ((eventMessage) => __awaiter(this, void 0, void 0, function* () {
@@ -254,13 +306,11 @@ let WebRtcProvider = class WebRtcProvider {
                     // accepting only JSON messages
                     try {
                         data = JSON.parse(eventMessage.data);
-                        // By default this class will only handle the disconnect event. Close the websocket connection and
-                        // Start a new one for others to connect
+                        // By default this class will only handle the disconnect event. Close the websocket on this side.
                         switch (data.action) {
                             case 'disconnect':
                                 console.log('peerConnection disconnect');
                                 this.disconnect();
-                                this.launchWebsocketClient();
                                 break;
                         }
                         this.receivedActions$.next(data);
@@ -276,6 +326,8 @@ let WebRtcProvider = class WebRtcProvider {
                 };
             });
             this.peerConnection.addEventListener('iceconnectionstatechange', event => {
+                console.log("event:", event);
+                console.log("this.peerConnection.iceConnectionState:", this.peerConnection.iceConnectionState);
                 if (this.peerConnection.iceConnectionState === 'disconnected') {
                     this.receivedActions$.next({ action: 'p2pConnected', p2pConnected: false });
                     this.peerConnection.close();

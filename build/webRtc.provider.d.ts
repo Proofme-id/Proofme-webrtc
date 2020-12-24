@@ -9,7 +9,7 @@ export declare class WebRtcProvider {
     receivedActions$: BehaviorSubject<any>;
     uuid$: BehaviorSubject<any>;
     websocketConnectionClosed$: BehaviorSubject<any>;
-    websocketConnectionOpen$: BehaviorSubject<boolean>;
+    websocketConnectionOpen$: BehaviorSubject<any>;
     webRtcConnectionConfig: RTCConfiguration;
     constructor();
     /**

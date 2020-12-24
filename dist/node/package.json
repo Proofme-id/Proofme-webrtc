@@ -1,6 +1,6 @@
 {
   "name": "@proofmeid/webrtc-node",
-  "version": "0.0.14",
+  "version": "0.0.26",
   "description": "WebRTC + Signaling Server",
   "author": "Proofme.ID",
   "license": "ISC",
@@ -21,6 +21,7 @@
     "ts-loader": "^5.2.1",
     "typescript": "4.0.5",
     "websocket": "^1.0.32",
+    "web3": "1.2.5",
     "wrtc": "^0.4.6"
   },
   "devDependencies": {

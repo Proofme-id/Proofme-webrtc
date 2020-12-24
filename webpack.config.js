@@ -72,6 +72,9 @@ module.exports = (env) => {
             module: module,
             resolve: resolve,
             mode: mode,
+            node: {
+                fs: 'empty'
+            },
             stats: "errors-only",
             devtool: mode == "development" ? "inline-source-map" : "source-map",
             plugins: [
