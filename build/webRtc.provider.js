@@ -208,7 +208,6 @@ let WebRtcProvider = class WebRtcProvider {
                                         }
                                         if (this.wsClient && this.wsClient.readyState === 1 && tries < maxTries) {
                                             clearInterval(interval);
-                                            yield this.setupPeerconnection(this.hostUuid);
                                             // If the application is not the host, send a connect request with the host UUID
                                             this.wsClient.send(JSON.stringify({ type: 'connect', host: this.hostUuid }));
                                         }
@@ -227,6 +226,9 @@ let WebRtcProvider = class WebRtcProvider {
                             console.log('webRtcConnectionConfig:', webRtcConnectionConfig);
                             if (webRtcConnectionConfig) {
                                 this.webRtcConnectionConfig = webRtcConnectionConfig;
+                                if (!this.webRtcConfig.isHost) {
+                                    yield this.setupPeerconnection(this.hostUuid);
+                                }
                             }
                             // When the host received an UUID
                             if (uuid && this.webRtcConfig.isHost) {
@@ -237,16 +239,16 @@ let WebRtcProvider = class WebRtcProvider {
                         case 'offer':
                             // If the application is not the host, it receives an offer whenever a client connects.
                             // The client will send an answer back
-                            console.log("Received offer");
+                            console.log("Received offer:", offer);
                             console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                             if (offer && !this.webRtcConfig.isHost) {
                                 yield this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
                                 const hostAnswer = yield this.peerConnection.createAnswer();
+                                yield this.peerConnection.setLocalDescription(hostAnswer);
                                 this.wsClient.send(JSON.stringify({
                                     type: 'answer',
                                     answer: hostAnswer
                                 }));
-                                yield this.peerConnection.setLocalDescription(hostAnswer);
                             }
                             break;
                         case 'host':
@@ -255,6 +257,9 @@ let WebRtcProvider = class WebRtcProvider {
                             if (uuid && this.webRtcConfig.isHost) {
                                 console.log('Websocket onmessage host waiting for user to connect to ' + uuid);
                                 this.setUuid(uuid);
+                                if (webRtcConnectionConfig) {
+                                    this.webRtcConnectionConfig = webRtcConnectionConfig;
+                                }
                                 yield this.setupPeerconnection(uuid);
                             }
                             break;
@@ -297,8 +302,9 @@ let WebRtcProvider = class WebRtcProvider {
      */
     setupPeerconnection(uuid) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log('setupPeerconnection with uuid:', uuid);
+            console.log("this.webRtcConnectionConfig:", this.webRtcConnectionConfig);
             this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
-            console.log('setting up peerconnection with uuid:', uuid);
             this.dataChannel = this.peerConnection.createDataChannel(uuid);
             this.peerConnection.addEventListener('datachannel', event => {
                 event.channel.onmessage = ((eventMessage) => __awaiter(this, void 0, void 0, function* () {

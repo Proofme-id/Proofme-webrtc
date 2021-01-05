@@ -17,7 +17,7 @@ export class SignalingServer {
         /**
             * Returns the configuration for the RTC peerconnection
             */
-        getRTCConnectionConfig(): RTCConfiguration;
+        getRTCConnectionConfig(type: string): RTCConfiguration;
         /**
             *
             * @param server

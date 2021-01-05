@@ -15,13 +15,14 @@ class SignalingServer {
     /**
      * Returns the configuration for the RTC peerconnection
      */
-    getRTCConnectionConfig() {
+    getRTCConnectionConfig(type) {
         if (this.rtcConnectionConfig.turnEnabled) {
             const time = Math.floor(Date.now() / 1000);
             const expiration = this.rtcConnectionConfig.turnExpiration;
-            const username = (time + expiration).toString();
+            const username = `${time + expiration}:${type}`;
             const credential = crypto.createHmac('sha1', this.rtcConnectionConfig.turnSecret).update(username.toString()).digest('base64');
             return {
+                iceCandidatePoolSize: 5,
                 iceServers: [{
                         urls: [this.rtcConnectionConfig.turnUrl],
                         credential,
@@ -101,6 +102,7 @@ class SignalingServer {
                             success: true,
                             message: 'Host initialised ' + ws.uuid,
                             uuid: ws.uuid,
+                            webRtcConnectionConfig: this.getRTCConnectionConfig('host')
                         });
                         break;
                     case 'connect':
@@ -109,18 +111,20 @@ class SignalingServer {
                             return client.uuid === host && client.connected === null && client.host === true;
                         });
                         if (hosts.length === 1) {
+                            // Host
                             sendTo(hosts[0], {
                                 type: 'connected',
                                 success: true,
                                 message: 'Client connected ' + ws.uuid,
                                 uuid: ws.uuid,
-                                webRtcConnectionConfig: this.getRTCConnectionConfig()
+                                webRtcConnectionConfig: this.getRTCConnectionConfig('host')
                             });
+                            // Client
                             sendTo(ws, {
                                 type: 'connected',
                                 success: true,
                                 message: 'Connected to ' + host,
-                                webRtcConnectionConfig: this.getRTCConnectionConfig()
+                                webRtcConnectionConfig: this.getRTCConnectionConfig('client')
                             });
                             // Link them together
                             ws.connected = hosts[0].uuid;

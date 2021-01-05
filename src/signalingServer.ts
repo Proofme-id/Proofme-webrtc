@@ -19,13 +19,14 @@ export class SignalingServer {
     /**
      * Returns the configuration for the RTC peerconnection
      */
-    getRTCConnectionConfig(): RTCConfiguration {
+    getRTCConnectionConfig(type: string): RTCConfiguration {
         if (this.rtcConnectionConfig.turnEnabled) {
             const time = Math.floor(Date.now() / 1000);
             const expiration = this.rtcConnectionConfig.turnExpiration;
-            const username = (time + expiration).toString();
+            const username = `${time + expiration}:${type}`;
             const credential = crypto.createHmac('sha1', this.rtcConnectionConfig.turnSecret).update(username.toString()).digest('base64');
             return {
+                iceCandidatePoolSize: 5,
                 iceServers: [{
                     urls: [this.rtcConnectionConfig.turnUrl],
                     credential,
@@ -109,6 +110,7 @@ export class SignalingServer {
                             success: true,
                             message: 'Host initialised ' + ws.uuid,
                             uuid: ws.uuid,
+                            webRtcConnectionConfig: this.getRTCConnectionConfig('host')
                         });
                         break;
                     case 'connect':
@@ -118,19 +120,21 @@ export class SignalingServer {
                         });
 
                         if (hosts.length === 1) {
+                            // Host
                             sendTo(hosts[0], {
                                 type: 'connected',
                                 success: true,
                                 message: 'Client connected ' + ws.uuid,
                                 uuid: ws.uuid,
-                                webRtcConnectionConfig: this.getRTCConnectionConfig()
+                                webRtcConnectionConfig: this.getRTCConnectionConfig('host')
                             });
 
+                            // Client
                             sendTo(ws, {
                                 type: 'connected',
                                 success: true,
                                 message: 'Connected to ' + host,
-                                webRtcConnectionConfig: this.getRTCConnectionConfig()
+                                webRtcConnectionConfig: this.getRTCConnectionConfig('client')
                             });
 
                             // Link them together
