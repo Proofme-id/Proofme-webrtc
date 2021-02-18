@@ -18,15 +18,6 @@ export class WebRtcProvider {
     constructor() {}
 
     /**
-     * Set the config of the WebRTC connection.
-     * Look into the IWebRTCConfig interface for the options
-     * @param webRtcConfig The WebRTC configuration
-     */
-    setConfig(webRtcConfig: IWebRTCConfig) {
-        this.webRtcConfig = webRtcConfig;
-    }
-
-    /**
      * Returns the WebRTC configuration
      */
     getConfig(): IWebRTCConfig {
@@ -118,7 +109,8 @@ export class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    async launchWebsocketClient() {
+    async launchWebsocketClient(webRtcConfig: IWebRTCConfig) {
+        this.webRtcConfig = webRtcConfig;
         const RTCSessionDescription = require('wrtc').RTCSessionDescription;
         const RTCIceCandidate = require('wrtc').RTCIceCandidate;
         const W3CWebSocket = require('websocket').w3cwebsocket;
@@ -320,6 +312,8 @@ export class WebRtcProvider {
             event.channel.onopen = (eventMessage: any) => {
                 console.log('Sending p2p connected!');
                 this.receivedActions$.next({ action: 'p2pConnected', p2pConnected: true });
+                console.log("p2p connected so close the websocket connection");
+                this.wsClient.close();
             };
         });
 

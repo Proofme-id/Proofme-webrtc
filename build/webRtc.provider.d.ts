@@ -13,12 +13,6 @@ export declare class WebRtcProvider {
     webRtcConnectionConfig: RTCConfiguration;
     constructor();
     /**
-     * Set the config of the WebRTC connection.
-     * Look into the IWebRTCConfig interface for the options
-     * @param webRtcConfig The WebRTC configuration
-     */
-    setConfig(webRtcConfig: IWebRTCConfig): void;
-    /**
      * Returns the WebRTC configuration
      */
     getConfig(): IWebRTCConfig;
@@ -55,7 +49,7 @@ export declare class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    launchWebsocketClient(): Promise<void>;
+    launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void>;
     /**
      * This method will setup the peerconnection and datachannel
      * It will also emit received actions over an observable

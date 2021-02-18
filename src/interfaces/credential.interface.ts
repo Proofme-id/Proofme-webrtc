@@ -20,6 +20,7 @@ export interface ICredential {
         signature: string
         holder: string;
     };
+    provider: string;
     type: string[];
     verifiedCredential?: boolean;
     version: string;

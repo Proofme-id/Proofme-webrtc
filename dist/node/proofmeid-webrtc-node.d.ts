@@ -2,9 +2,11 @@
 // Dependencies for this module:
 //   ../http
 //   ../rxjs
+//   ../web3
 
 import * as http from "http";
 import { BehaviorSubject } from 'rxjs';
+import Web3 from "web3";
 
 export class SignalingServer {
         wss: any;
@@ -37,12 +39,6 @@ export class WebRtcProvider {
         websocketConnectionOpen$: BehaviorSubject<any>;
         webRtcConnectionConfig: RTCConfiguration;
         constructor();
-        /**
-            * Set the config of the WebRTC connection.
-            * Look into the IWebRTCConfig interface for the options
-            * @param webRtcConfig The WebRTC configuration
-            */
-        setConfig(webRtcConfig: IWebRTCConfig): void;
         /**
             * Returns the WebRTC configuration
             */
@@ -80,7 +76,7 @@ export class WebRtcProvider {
         /**
             * This method will launch the websocket and listen to events
             */
-        launchWebsocketClient(): Promise<void>;
+        launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void>;
         /**
             * This method will setup the peerconnection and datachannel
             * It will also emit received actions over an observable
@@ -90,7 +86,10 @@ export class WebRtcProvider {
 }
 
 export class ProofmeUtilsProvider {
-    validCredentials(credentialObject: ICredentialObject, web3Url: string): Promise<IValidCredential>;
+    validCredentials(credentialObject: ICredentialObject, identifyByCredentials: IIdentifyByCredentials[], web3Url: string): Promise<IValidCredential>;
+    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, identifyByCredentials: IIdentifyByCredentials[], trustedDids: string[]): Promise<IValidCredential>;
+    signCredential(credential: ICredential, privateKey: string): string;
+    signCredentialObject(credential: ICredentialObject, privateKey: string): string;
 }
 
 export interface IRTCConnectionConfig {
@@ -107,7 +106,12 @@ export interface IWebRTCConfig {
     isHost: boolean;
 }
 
-export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string): Promise<{
+export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByCredentials: IIdentifyByCredentials[], trustedDids: string[]): Promise<{
+    valid: boolean;
+    code: number;
+    message: string;
+}>;
+export function validCredentialsFunc(credentialObject: ICredentialObject, identifyByCredentials: IIdentifyByCredentials[], web3Url: string): Promise<{
     valid: boolean;
     code: number;
     message: string;
@@ -119,6 +123,9 @@ export function knownAddressesContains(list: any[], sha3Key: string, didContract
 export function getSha3Key(key: string, web3Node: any): any;
 export function getKeyPurpose(keyManagerContract: any, key: string): Promise<string>;
 export function calculateMinutesDifference(dt2: Date, dt1: Date): number;
+export function signCredential(credential: ICredential, privateKey: string): string;
+export function signCredentialObject(credential: ICredentialObject, privateKey: string): string;
+export function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
 
 export interface IValidCredential {
     valid: boolean;
@@ -131,12 +138,6 @@ export interface ICredentialObject {
         [key: string]: ICredential;
     };
     proof: IProof;
-}
-
-export interface ICheckedDid {
-    holderKey: string;
-    did: string;
-    result: boolean;
 }
 
 export interface ICredential {
@@ -161,9 +162,21 @@ export interface ICredential {
         signature: string;
         holder: string;
     };
+    provider: string;
     type: string[];
     verifiedCredential?: boolean;
     version: string;
+}
+
+export interface IIdentifyByCredentials {
+    key: string;
+    provider: string[];
+}
+
+export interface ICheckedDid {
+    holderKey: string;
+    did: string;
+    result: boolean;
 }
 
 export interface IProof {

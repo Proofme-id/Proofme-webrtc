@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validCredentialsFunc = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
+exports.signCredential = exports.signCredentialObject = exports.validCredentialsFunc = exports.userCredentialSignatureWrong = exports.knownAddressesContains = exports.issuerCredentialSignatureWrong = exports.getSha3Key = exports.getKeyPurpose = exports.didContractKeyWrong = exports.calculateMinutesDifference = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
 var signalingServer_1 = require("./signalingServer");
 Object.defineProperty(exports, "SignalingServer", { enumerable: true, get: function () { return signalingServer_1.SignalingServer; } });
 var webRtc_provider_1 = require("./webRtc.provider");
@@ -8,5 +8,23 @@ Object.defineProperty(exports, "WebRtcProvider", { enumerable: true, get: functi
 var proofme_utils_provider_1 = require("./proofme-utils.provider");
 Object.defineProperty(exports, "ProofmeUtilsProvider", { enumerable: true, get: function () { return proofme_utils_provider_1.ProofmeUtilsProvider; } });
 var functions_1 = require("./functions/functions");
-Object.defineProperty(exports, "validCredentialsFunc", { enumerable: true, get: function () { return functions_1.validCredentialsFunc; } });
+Object.defineProperty(exports, "calculateMinutesDifference", { enumerable: true, get: function () { return functions_1.calculateMinutesDifference; } });
+var functions_2 = require("./functions/functions");
+Object.defineProperty(exports, "didContractKeyWrong", { enumerable: true, get: function () { return functions_2.didContractKeyWrong; } });
+var functions_3 = require("./functions/functions");
+Object.defineProperty(exports, "getKeyPurpose", { enumerable: true, get: function () { return functions_3.getKeyPurpose; } });
+var functions_4 = require("./functions/functions");
+Object.defineProperty(exports, "getSha3Key", { enumerable: true, get: function () { return functions_4.getSha3Key; } });
+var functions_5 = require("./functions/functions");
+Object.defineProperty(exports, "issuerCredentialSignatureWrong", { enumerable: true, get: function () { return functions_5.issuerCredentialSignatureWrong; } });
+var functions_6 = require("./functions/functions");
+Object.defineProperty(exports, "knownAddressesContains", { enumerable: true, get: function () { return functions_6.knownAddressesContains; } });
+var functions_7 = require("./functions/functions");
+Object.defineProperty(exports, "userCredentialSignatureWrong", { enumerable: true, get: function () { return functions_7.userCredentialSignatureWrong; } });
+var functions_8 = require("./functions/functions");
+Object.defineProperty(exports, "validCredentialsFunc", { enumerable: true, get: function () { return functions_8.validCredentialsFunc; } });
+var functions_9 = require("./functions/functions");
+Object.defineProperty(exports, "signCredentialObject", { enumerable: true, get: function () { return functions_9.signCredentialObject; } });
+var functions_10 = require("./functions/functions");
+Object.defineProperty(exports, "signCredential", { enumerable: true, get: function () { return functions_10.signCredential; } });
 //# sourceMappingURL=index.js.map

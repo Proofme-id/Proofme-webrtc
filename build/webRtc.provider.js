@@ -32,14 +32,6 @@ let WebRtcProvider = class WebRtcProvider {
         this.websocketConnectionOpen$ = new rxjs_1.BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
     }
     /**
-     * Set the config of the WebRTC connection.
-     * Look into the IWebRTCConfig interface for the options
-     * @param webRtcConfig The WebRTC configuration
-     */
-    setConfig(webRtcConfig) {
-        this.webRtcConfig = webRtcConfig;
-    }
-    /**
      * Returns the WebRTC configuration
      */
     getConfig() {
@@ -127,8 +119,9 @@ let WebRtcProvider = class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    launchWebsocketClient() {
+    launchWebsocketClient(webRtcConfig) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.webRtcConfig = webRtcConfig;
             const RTCSessionDescription = require('wrtc').RTCSessionDescription;
             const RTCIceCandidate = require('wrtc').RTCIceCandidate;
             const W3CWebSocket = require('websocket').w3cwebsocket;
@@ -329,6 +322,8 @@ let WebRtcProvider = class WebRtcProvider {
                 event.channel.onopen = (eventMessage) => {
                     console.log('Sending p2p connected!');
                     this.receivedActions$.next({ action: 'p2pConnected', p2pConnected: true });
+                    console.log("p2p connected so close the websocket connection");
+                    this.wsClient.close();
                 };
             });
             this.peerConnection.addEventListener('iceconnectionstatechange', event => {
