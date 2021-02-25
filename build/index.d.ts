@@ -11,5 +11,6 @@ export { issuerCredentialSignatureWrong } from "./functions/functions";
 export { knownAddressesContains } from "./functions/functions";
 export { userCredentialSignatureWrong } from "./functions/functions";
 export { validCredentialsFunc } from "./functions/functions";
+export { validCredentialsTrustedPartiesFunc } from "./functions/functions";
 export { signCredentialObject } from "./functions/functions";
 export { signCredential } from "./functions/functions";
