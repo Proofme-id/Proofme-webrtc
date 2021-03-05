@@ -2,12 +2,19 @@ import Web3 from "web3";
 import { ICheckedDid } from "../interfaces/checkedDid.interface";
 import { ICredential } from "../interfaces/credential.interface";
 import { ICredentialObject } from "../interfaces/credentialsObject.interface";
-import { IIdentifyByCredentials } from "../interfaces/identifyByCredentials.interface";
+import { IProofObject } from "../interfaces/proof-object.interface";
+import { IValidatedCredentials } from "../interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "../smartcontracts/claimHolderAbi";
 
-export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByCredentials: IIdentifyByCredentials[], trustedDids: string[]) {
+export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials> {
     const web3 = new Web3(web3Url);
-    const result = await validCredentialsFunc(credentialObject, identifyByCredentials, web3Url);
+    const result = await validCredentialsFunc(credentialObject, identifyByProviders, web3Url);
+    // If the "normal" check was not valid, don't check the trusted parties but return the result
+    if (!result.valid) {
+        console.log("return NOT valid");
+        return result;
+    }
+    // Check if the trusted addresses are addressed
     for (const did of trustedDids) {
         if (!web3.utils.isAddress(did)) {
             console.error(`Trusted party did ${did} is NOT a valid address and is removed.`);
@@ -15,88 +22,105 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
         }
     }
     if (trustedDids.length > 0) {
-        if (result.valid) {
-            const checkedDid = [];
-            let validCredentialsAmount = 0;
-            for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials)) {
-                const issuerDidContractAddress = credential.issuer.id.split(":")[2];
-                let foundValid = false;
-                let invalidKeyProvider = null;
-                let invalidKeyProviderAllowedKeys = null;
-                for (const did of trustedDids) {
-                    const foundEntry = checkedDid.find(x => x.issuerDidContractAddress === issuerDidContractAddress && x.did === did);
-                    let claim = null;
-                    if (foundEntry) {
-                        claim = foundEntry.claim;
-                    } else {
-                        claim = await getClaims(issuerDidContractAddress, did, web3);
-                        checkedDid.push({issuerDidContractAddress, did, claim})
-                        claim = claim;
-                    }
-                    console.log("claim:", claim);
-                    if (claim) {
-                        const claimExpirationDate = new Date(claim.expirationDate);
-                        if (claimExpirationDate > new Date()) {
-                            const claimAllowedCredentialKeys = claim.keys;
-                            invalidKeyProviderAllowedKeys = claimAllowedCredentialKeys;
-                            const providerCredentialKey = `${credential.provider}_${currentCredentialKey}`;
-                            console.log("Checking key:", providerCredentialKey);
-                            if (!claimAllowedCredentialKeys.includes(providerCredentialKey)) {
-                                invalidKeyProvider = providerCredentialKey;
-                                console.log(`Provider ${did} was not allowed to issue key ${providerCredentialKey}. Skipping this one`)
-                                break;
-                            }
-                            if (!invalidKeyProvider) {
-                                validCredentialsAmount++;
-                                foundValid = true;
-                                break;
-                            }
-                        } else {
-                            return {
-                                valid: false,
-                                code: 7,
-                                message: "Claim expired."
-                            }
+        const checkedDid = [];
+        let validCredentialsAmount = 0;
+        let invalidCredentials = [];
+        for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials)) {
+            const issuerDidContractAddress = credential.issuer.id.split(":")[2];
+            let foundValid = false;
+            let invalidKeyProvider = null;
+            let invalidKeyProviderAllowedKeys = null;
+            let noTrustedClaimFound = true;
+            for (const did of trustedDids) {
+                const foundEntry = checkedDid.find(x => x.issuerDidContractAddress === issuerDidContractAddress && x.did === did);
+                let claim = null;
+                if (foundEntry) {
+                    claim = foundEntry.claim;
+                } else {
+                    console.log("get claim issuerDidContractAddress:", issuerDidContractAddress);
+                    console.log("get claim did:", did);
+                    claim = await getClaims(issuerDidContractAddress, did, web3);
+                    console.log("got claim:", claim);
+                    checkedDid.push({issuerDidContractAddress, did, claim})
+                    claim = claim;
+                }
+                console.log("claim:", claim);
+                if (claim) {
+                    noTrustedClaimFound = false;
+                    const claimExpirationDate = new Date(claim.expirationDate);
+                    if (claimExpirationDate > new Date()) {
+                        const claimAllowedCredentialKeys = claim.keys;
+                        invalidKeyProviderAllowedKeys = claimAllowedCredentialKeys;
+                        const providerCredentialKey = `${credential.provider}_${currentCredentialKey}`;
+                        console.log("Checking key:", providerCredentialKey);
+                        if (!claimAllowedCredentialKeys.includes(providerCredentialKey)) {
+                            invalidKeyProvider = providerCredentialKey;
+                            console.log(`Provider ${did} was not allowed to issue key ${providerCredentialKey}. Skipping this one`)
+                            break;
                         }
-                    }
-                }
-                if (invalidKeyProvider && !foundValid) {
-                    return {
-                        valid: false,
-                        code: 8,
-                        message: `Tried to validate attribute ${invalidKeyProvider} but provider was not allowed to issue. Allowed attributes: ${invalidKeyProviderAllowedKeys.join(", ")}`
+                        if (!invalidKeyProvider) {
+                            validCredentialsAmount++;
+                            foundValid = true;
+                            break;
+                        }
+                    } else {
+                        invalidCredentials.push({
+                            credential,
+                            valid: false,
+                            code: 14,
+                            message: "Claim expired."
+                        });
                     }
                 }
             }
-            console.log("trusted check validCredentialsAmount:", validCredentialsAmount);
-            console.log("trusted check credentials total:", Object.entries(credentialObject.credentials).length);
-            if (validCredentialsAmount === Object.entries(credentialObject.credentials).length) {
-                return {
-                    valid: true,
-                    code: 0,
-                    message: "Valid credential"
-                }
+            if (noTrustedClaimFound) {
+                invalidCredentials.push({
+                    credential,
+                    valid: false,
+                    code: 13,
+                    message: `No claims found to check. Checked dids ${trustedDids}`
+                });
+                continue;
             }
+            if (invalidKeyProvider && !foundValid) {
+                invalidCredentials.push({
+                    credential,
+                    valid: false,
+                    code: 12,
+                    message: `Tried to validate attribute ${invalidKeyProvider} but provider was not allowed to issue. Allowed attributes: ${invalidKeyProviderAllowedKeys.join(", ")}`
+                });
+                continue;
+            }
+        }
+        console.log("trusted check validCredentialsAmount:", validCredentialsAmount);
+        console.log("trusted check credentials total:", Object.entries(credentialObject.credentials).length);
+        if (validCredentialsAmount === Object.entries(credentialObject.credentials).length) {
             return {
-                valid: false,
-                code: 8,
-                message: `Only ${validCredentialsAmount}/${Object.entries(credentialObject.credentials).length} credentials were valid in trusted list (${trustedDids.join(" ")})`
+                credentials: credentialObject.credentials,
+                proof: credentialObject.proof,
+                valid: true,
+                code: 0,
+                message: "Valid credential"
             }
         } else {
-            console.log("return NOT valid");
-            return result;
+            return {
+                valid: false,
+                code: 1,
+                message: "Invalid credentials",
+                invalidCredentials
+            }
         }
     } else {
         return {
             valid: false,
-            code: 6,
+            code: 10,
             message: "No trusted parties to check."
         }
     }
 
 }
 
-export async function validCredentialsFunc(credentialObject: ICredentialObject, identifyByCredentials: IIdentifyByCredentials[], web3Url: string) {
+export async function validCredentialsFunc(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials> {
     // If the object is stringified
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
@@ -107,31 +131,35 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
     const credentialObjectWithoutProofSignature = JSON.parse(JSON.stringify(credentialObject));
     delete credentialObjectWithoutProofSignature.proof.signature;
     let validCredentialsAmount = 0;
+    let invalidCredentials = [];
     for (const [, credential] of Object.entries(credentialObject.credentials)) {
-        const foundProvider = identifyByCredentials.find(x => x.provider.includes(credential.provider));
+        const foundProvider = identifyByProviders.includes(credential.provider);
         if (!foundProvider) {
-            console.log(`FAILURE The application asked for providers ${identifyByCredentials.map(x => x.provider.join(" "))} but got provider ${credential.provider}`);
-            return {
-                valid: false,
+            console.log(`FAILURE The application asked for providers ${identifyByProviders} but got provider ${credential.provider}`);
+            invalidCredentials.push({
+                credential,
                 code: 9,
-                message: `FAILURE The application asked for providers ${identifyByCredentials.map(x => x.provider.join(" "))} but got provider ${credential.provider}`
-            }
+                message: `FAILURE The application asked for providers ${identifyByProviders} but got provider ${credential.provider}`
+            })
+            continue;
         }
         if (!credential.version) {
-            return {
-                valid: false,
-                code: 6,
+            invalidCredentials.push({
+                credential,
+                code: 8,
                 message: "Incorrect credential version. Renew your credentials"
-            }
+            });
+            continue;
         }
         const credentialExpirationDate = new Date(credential.expirationDate);
         const now = new Date();
         if (now > credentialExpirationDate) {
-            return {
-                valid: false,
+            invalidCredentials.push({
+                credential,
                 code: 7,
                 message: `Your credential expired on ${credentialExpirationDate}`
-            }
+            });
+            continue;
         }
         console.log("user signature object:", credentialObjectWithoutProofSignature);
         console.log("should recover:", credentialObject.proof.holder);
@@ -157,48 +185,57 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
                         if (userCorrectDid) {
                             validCredentialsAmount++;
                         } else {
-                            return {
-                                valid: false,
-                                code: 5,
+                            invalidCredentials.push({
+                                credential,
+                                code: 6,
                                 message: "User did incorrect"
-                            }
+                            });
                         }
                     } else {
-                        return {
-                            valid: false,
-                            code: 4,
+                        invalidCredentials.push({
+                            credential,
+                            code: 5,
                             message: "Issuer did incorrect"
-                        }
+                        });
                     }
                 } else {
-                    return {
-                        valid: false,
-                        code: 3,
+                    invalidCredentials.push({
+                        credential,
+                        code: 4,
                         message: "Issuer signature incorrect"
-                    }
+                    });
                 }
             } else {
-                return {
-                    valid: false,
-                    code: 2,
+                invalidCredentials.push({
+                    credential,
+                    code: 3,
                     message: "User signature incorrect"
-                }
+                });
             }
         } else {
-            return {
-                valid: false,
-                code: 1,
+            invalidCredentials.push({
+                credential,
+                code: 2,
                 message: "QR code expired"
-            }
+            });
         }
     }
     console.log("only cred validCredentialsAmount:", validCredentialsAmount);
     console.log("only cred credentials total:", Object.entries(credentialObject.credentials).length);
     if (validCredentialsAmount === Object.entries(credentialObject.credentials).length) {
         return {
+            credentials: credentialObject.credentials,
+            proof: credentialObject.proof,
             valid: true,
             code: 0,
             message: "Valid credential"
+        }
+    } else {
+        return {
+            valid: false,
+            code: 1,
+            message: "Invalid credential",
+            invalidCredentials
         }
     }
 }
@@ -383,4 +420,41 @@ export async function getClaims(claimType: number | string, contractAddress: str
     } else {
         return Promise.resolve(null);
     }
+}
+
+export function signProofObject(proofObject: IProofObject, privateKey: string) {
+    console.log("signProofObject");
+    // If the object is stringified
+    if (typeof proofObject === "string") {
+        proofObject = JSON.parse(proofObject);
+    }
+    proofObject = reOrderProofObject(proofObject);
+    const web3 = new Web3();
+    return web3.eth.accounts.sign(JSON.stringify(proofObject), privateKey).signature
+};
+
+function reOrderProofObject(proofObject: IProofObject): IProofObject {
+    console.log("reOrderProofObject:", proofObject);
+    return {
+        credentialSubject: {
+            credential: {
+                description: proofObject.credentialSubject.credential.description,
+                hash: proofObject.credentialSubject.credential.hash,
+                link: proofObject.credentialSubject.credential.link,
+                template: proofObject.credentialSubject.credential.template,
+                type: proofObject.credentialSubject.credential.description
+            }
+        },
+        expirationDate: proofObject.expirationDate,
+        id: proofObject.id,
+        issuanceDate: proofObject.issuanceDate,
+        proof: {
+            holder: proofObject.proof.holder,
+            nonce: proofObject.proof.nonce,
+            signature: proofObject.proof.signature,
+            type: proofObject.proof.type
+        },
+        type: proofObject.type,
+        version: proofObject.version
+    } as IProofObject
 }

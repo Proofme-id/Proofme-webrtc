@@ -86,10 +86,11 @@ export class WebRtcProvider {
 }
 
 export class ProofmeUtilsProvider {
-    validCredentials(credentialObject: ICredentialObject, identifyByCredentials: IIdentifyByCredentials[], web3Url: string): Promise<IValidCredential>;
-    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, identifyByCredentials: IIdentifyByCredentials[], trustedDids: string[]): Promise<IValidCredential>;
+    validCredentials(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials>;
+    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials>;
     signCredential(credential: ICredential, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
+    signProofObject(proofObject: IProofObject, privateKey: string): string;
 }
 
 export interface IRTCConnectionConfig {
@@ -106,16 +107,40 @@ export interface IWebRTCConfig {
     isHost: boolean;
 }
 
-export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByCredentials: IIdentifyByCredentials[], trustedDids: string[]): Promise<{
-    valid: boolean;
-    code: number;
-    message: string;
-}>;
-export function validCredentialsFunc(credentialObject: ICredentialObject, identifyByCredentials: IIdentifyByCredentials[], web3Url: string): Promise<{
-    valid: boolean;
-    code: number;
-    message: string;
-}>;
+export interface IProofObject {
+    credentialSubject: {
+        credential: {
+            description: string;
+            hash: string;
+            link: string;
+            template?: string;
+            type: string;
+        };
+    };
+    expirationDate: string;
+    id?: string;
+    issuanceDate?: number;
+    proof?: {
+        holder: string;
+        nonce: number;
+        signature?: string;
+        type: string;
+    };
+    txHash?: string;
+    type: string[];
+    verifiedCredential?: boolean;
+    version: string;
+}
+
+export interface IProof {
+    holder: string;
+    nonce: number;
+    type: string;
+    signature?: string;
+}
+
+export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials>;
+export function validCredentialsFunc(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials>;
 export function userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
 export function issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
 export function didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
@@ -126,11 +151,17 @@ export function calculateMinutesDifference(dt2: Date, dt1: Date): number;
 export function signCredential(credential: ICredential, privateKey: string): string;
 export function signCredentialObject(credential: ICredentialObject, privateKey: string): string;
 export function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
+export function signProofObject(proofObject: IProofObject, privateKey: string): string;
 
-export interface IValidCredential {
-    valid: boolean;
-    message: string;
+export interface IValidatedCredentials {
     code: number;
+    credentials?: {
+        [key: string]: ICredential;
+    };
+    invalidCredentials?: ICredential[];
+    message: string;
+    proof?: IProof;
+    valid: boolean;
 }
 
 export interface ICredentialObject {
@@ -168,21 +199,9 @@ export interface ICredential {
     version: string;
 }
 
-export interface IIdentifyByCredentials {
-    key: string;
-    provider: string[];
-}
-
 export interface ICheckedDid {
     holderKey: string;
     did: string;
     result: boolean;
-}
-
-export interface IProof {
-    holder: string;
-    nonce: number;
-    type: string;
-    signature?: string;
 }
 

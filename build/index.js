@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.signCredential = exports.signCredentialObject = exports.validCredentialsTrustedPartiesFunc = exports.validCredentialsFunc = exports.userCredentialSignatureWrong = exports.knownAddressesContains = exports.issuerCredentialSignatureWrong = exports.getSha3Key = exports.getKeyPurpose = exports.didContractKeyWrong = exports.calculateMinutesDifference = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
+exports.signCredential = exports.signProofObject = exports.signCredentialObject = exports.validCredentialsTrustedPartiesFunc = exports.validCredentialsFunc = exports.userCredentialSignatureWrong = exports.knownAddressesContains = exports.issuerCredentialSignatureWrong = exports.getSha3Key = exports.getKeyPurpose = exports.didContractKeyWrong = exports.calculateMinutesDifference = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
 var signalingServer_1 = require("./signalingServer");
 Object.defineProperty(exports, "SignalingServer", { enumerable: true, get: function () { return signalingServer_1.SignalingServer; } });
 var webRtc_provider_1 = require("./webRtc.provider");
@@ -28,5 +28,7 @@ Object.defineProperty(exports, "validCredentialsTrustedPartiesFunc", { enumerabl
 var functions_10 = require("./functions/functions");
 Object.defineProperty(exports, "signCredentialObject", { enumerable: true, get: function () { return functions_10.signCredentialObject; } });
 var functions_11 = require("./functions/functions");
-Object.defineProperty(exports, "signCredential", { enumerable: true, get: function () { return functions_11.signCredential; } });
+Object.defineProperty(exports, "signProofObject", { enumerable: true, get: function () { return functions_11.signProofObject; } });
+var functions_12 = require("./functions/functions");
+Object.defineProperty(exports, "signCredential", { enumerable: true, get: function () { return functions_12.signCredential; } });
 //# sourceMappingURL=index.js.map
