@@ -1,11 +1,9 @@
 import { ICredential } from "./credential.interface";
-import { IProof } from "./proof.interface";
-
+import { ICredentialObject } from "./credentialsObject.interface";
 export interface IValidatedCredentials {
 	code: number;
-    credentials?: { [key: string]: ICredential; };
+    credentials?: ICredentialObject
     invalidCredentials?: ICredential[];
 	message: string;
-	proof?: IProof;
 	valid: boolean;
 }

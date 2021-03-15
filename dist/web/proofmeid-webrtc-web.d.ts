@@ -155,20 +155,16 @@ export function signProofObject(proofObject: IProofObject, privateKey: string): 
 
 export interface IValidatedCredentials {
     code: number;
-    credentials?: {
-        [key: string]: ICredential;
-    };
+    credentials?: ICredentialObject;
     invalidCredentials?: ICredential[];
     message: string;
-    proof?: IProof;
     valid: boolean;
 }
 
 export interface ICredentialObject {
     credentials: {
-        [key: string]: ICredential;
+        [provider: string]: IIdentifyItem;
     };
-    proof: IProof;
 }
 
 export interface ICredential {
@@ -203,5 +199,12 @@ export interface ICheckedDid {
     holderKey: string;
     did: string;
     result: boolean;
+}
+
+export interface IIdentifyItem {
+    credentials: {
+        [key: string]: ICredential;
+    };
+    proof: IProof;
 }
 
