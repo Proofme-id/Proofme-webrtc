@@ -13,7 +13,9 @@ export class WebRtcProvider {
     uuid$ = new BehaviorSubject(null); // Whenever the UUID is set, it will emit an event (so that the host can set it somewhere in like a QR)
     websocketConnectionClosed$ = new BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
     websocketConnectionOpen$ = new BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
+    websocketConnectionError$ = new BehaviorSubject(null); // Whenever there is an error event on the websocket, this observable will emit
     webRtcConnectionConfig: RTCConfiguration;
+    connectionTimeout: NodeJS.Timeout = null;
 
     constructor() {}
 
@@ -115,10 +117,15 @@ export class WebRtcProvider {
         const RTCIceCandidate = require('wrtc').RTCIceCandidate;
         const W3CWebSocket = require('websocket').w3cwebsocket;
 
+        let connectionSuccess = null;
         this.receivedActions$ = new BehaviorSubject(null);
+        if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+        }
         this.uuid$ = new BehaviorSubject(null);
         this.websocketConnectionClosed$ = new BehaviorSubject(null);
         this.websocketConnectionOpen$ = new BehaviorSubject(null); 
+        this.websocketConnectionError$ = new BehaviorSubject(null); 
 
         let signalingUrl = this.webRtcConfig.signalingUrl;
         if (!signalingUrl) {
@@ -126,11 +133,20 @@ export class WebRtcProvider {
             signalingUrl = 'wss://auth.proofme.id';
         }
         console.log('Connecting to signaling server:', signalingUrl);
-        this.wsClient = await new W3CWebSocket(signalingUrl);
+        this.wsClient = new W3CWebSocket(signalingUrl);
+        // So if there is not a success connection after 10 seconds, close the socket and send an error
+        this.connectionTimeout = setTimeout(() => {
+            if (connectionSuccess !== true) {
+                this.websocketConnectionError$.next(true);
+                this.wsClient.close();
+            }
+        }, 10000);
         this.wsClient.onerror = (error => {
             console.log('Websocket error: ' + error.toString());
+            connectionSuccess = false;
             this.websocketConnectionClosed$.next(true);
             this.websocketConnectionOpen$.next(false);
+            this.websocketConnectionError$.next(true);
         });
         this.wsClient.onclose = (() => {
             console.log('Websocket connection closed');
@@ -139,6 +155,7 @@ export class WebRtcProvider {
         });
         this.wsClient.onopen = (() => {
             console.log('Websocket connection open');
+            connectionSuccess = true;
             this.websocketConnectionClosed$.next(false);
             this.websocketConnectionOpen$.next(true);
         });
