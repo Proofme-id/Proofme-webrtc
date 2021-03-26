@@ -4,16 +4,18 @@ import { ICredentialObject } from "./interfaces/credentialsObject.interface";
 import { signCredential, signCredentialObject, signProofObject, validCredentialsFunc, validCredentialsTrustedPartiesFunc } from "./functions/functions";
 import { ICredential } from "./interfaces/credential.interface";
 import { IProofObject } from "./interfaces/proof-object.interface";
+import { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
+import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 
 @Injectable()
 export class ProofmeUtilsProvider {
 
-	async validCredentials(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials>  {
-        return validCredentialsFunc(credentialObject, identifyByProviders, web3Url);
+	async validCredentials(credentialObject: ICredentialObject, web3Url: string): Promise<IValidatedCredentials>  {
+        return validCredentialsFunc(credentialObject, web3Url);
     }
 
-	async validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials>  {
-        return validCredentialsTrustedPartiesFunc(credentialObject, web3Url, identifyByProviders, trustedDids);
+	async validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[]): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>  {
+        return validCredentialsTrustedPartiesFunc(credentialObject, web3Url, requestedCredentials, trustedDids);
     }
 
     signCredential(credential: ICredential, privateKey: string): string  {

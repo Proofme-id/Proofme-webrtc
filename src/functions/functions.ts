@@ -3,15 +3,21 @@ import { ICheckedDid } from "../interfaces/checkedDid.interface";
 import { ICredential } from "../interfaces/credential.interface";
 import { ICredentialObject } from "../interfaces/credentialsObject.interface";
 import { IProofObject } from "../interfaces/proof-object.interface";
+import { IRequestedCredentials } from "../interfaces/requestedCredentials.interface";
+import { IRequestedCredentialsCheckResult } from "../interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "../interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "../smartcontracts/claimHolderAbi";
 
-export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials> {
+export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[]): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
     const web3 = new Web3(web3Url);
-    const result = await validCredentialsFunc(credentialObject, identifyByProviders, web3Url);
+    const requestedCheckResult = requestedCredentialsCorrect(credentialObject, requestedCredentials);
+    if (!requestedCheckResult.success) {
+        requestedCheckResult.credentials = credentialObject;
+        return requestedCheckResult;
+    }
+    const result = await validCredentialsFunc(credentialObject, web3Url);
     // If the "normal" check was not valid, don't check the trusted parties but return the result
     if (!result.valid) {
-        console.log("return NOT valid");
         return result;
     }
     // Check if the trusted addresses are addressed
@@ -98,7 +104,8 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
                 credentials: credentialObject.credentials as any,
                 valid: true,
                 code: 0,
-                message: "Valid credential"
+                message: "Valid credential",
+                requestedCheckResult
             }
         } else {
             return {
@@ -118,7 +125,7 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
 
 }
 
-export async function validCredentialsFunc(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials> {
+export async function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string): Promise<IValidatedCredentials> {
     // If the object is stringified
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
@@ -132,16 +139,6 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
     for (const [provider, ] of Object.entries(credentialObject.credentials)) {
         for (const [, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
             credentialsAmount++;
-            const foundProvider = identifyByProviders.includes(credential.provider);
-            if (!foundProvider) {
-                console.log(`FAILURE The application asked for providers ${identifyByProviders} but got provider ${credential.provider}`);
-                invalidCredentials.push({
-                    credential,
-                    code: 9,
-                    message: `FAILURE The application asked for providers ${identifyByProviders} but got provider ${credential.provider}`
-                })
-                continue;
-            }
             if (!credential.version) {
                 invalidCredentials.push({
                     credential,
@@ -214,7 +211,7 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
                 invalidCredentials.push({
                     credential,
                     code: 2,
-                    message: "QR code expired"
+                    message: "Nonce too old"
                 });
             }
         }
@@ -450,4 +447,63 @@ function reOrderProofObject(proofObject: IProofObject): IProofObject {
         type: proofObject.type,
         version: proofObject.version
     } as IProofObject
+}
+
+function requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult {
+    console.log("requestedCredentials:", requestedCredentials);
+    console.log("credentials:", credentials);
+
+    let checkResult: IRequestedCredentialsCheckResult = {
+        success: true,
+        missingKeys: []
+    }
+    // Loop all requested credentials
+    for (const requestedCredential of requestedCredentials.credentials) {
+        let isInsideMinimumRequired = false;
+        if (requestedCredentials.minimumRequired) {
+            isInsideMinimumRequired = !!requestedCredentials.minimumRequired.data.find(x => x === requestedCredential.key);
+        }
+        // Check only required keys
+        if (requestedCredential.required && !isInsideMinimumRequired) {
+            if (!Array.isArray(requestedCredential.provider)) {
+                requestedCredential.provider = [requestedCredential.provider];
+            }
+            let found = false;
+            for (const provider of requestedCredential.provider) {
+                if (credentials.credentials[provider] &&
+                    credentials.credentials[provider].credentials &&
+                    credentials.credentials[provider].credentials[requestedCredential.key]
+                ) {
+                    // All good, found!
+                    found = true;
+                }
+            }
+            if (!found){ 
+                checkResult.success = false;
+                checkResult.missingKeys.push(requestedCredential);
+            }
+        }
+    }
+    // Check if the minimum required amount has been reached
+    if (requestedCredentials.minimumRequired) {
+        const providers = Object.keys(credentials.credentials);
+        const credentialKeys = requestedCredentials.minimumRequired.data;
+        let foundCredentials = 0;
+        for (const provider of providers) {
+            for (const credentialKey of credentialKeys) {
+                if (credentials.credentials[provider] &&
+                    credentials.credentials[provider].credentials &&
+                    credentials.credentials[provider].credentials[credentialKey]
+                ) {
+                    // All good, found!
+                    foundCredentials++;
+                }
+            }
+        }
+        if (foundCredentials < requestedCredentials.minimumRequired.amount) {
+            checkResult.success = false;
+            checkResult.missingMessage = `Check the minimumRequired array. Found ${foundCredentials} items and required amount ${requestedCredentials.minimumRequired.amount}`
+        }
+    }
+    return checkResult;
 }

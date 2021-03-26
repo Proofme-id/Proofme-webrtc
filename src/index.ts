@@ -5,6 +5,9 @@ export { IRTCConnectionConfig } from "./interfaces/rtcConnectionConfig.interface
 export { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 export { IProofObject } from "./interfaces/proof-object.interface";
 export { IProof } from "./interfaces/proof.interface";
+export { IRequestedCredentialKey } from "./interfaces/requestedCredentialKey.interface";
+export { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
+export { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 export { calculateMinutesDifference } from "./functions/functions"
 export { didContractKeyWrong } from "./functions/functions"
 export { getKeyPurpose } from "./functions/functions"

@@ -88,8 +88,8 @@ export class WebRtcProvider {
 }
 
 export class ProofmeUtilsProvider {
-    validCredentials(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials>;
-    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials>;
+    validCredentials(credentialObject: ICredentialObject, web3Url: string): Promise<IValidatedCredentials>;
+    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[]): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
     signCredential(credential: ICredential, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
     signProofObject(proofObject: IProofObject, privateKey: string): string;
@@ -141,8 +141,33 @@ export interface IProof {
     signature?: string;
 }
 
-export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, identifyByProviders: string[], trustedDids: string[]): Promise<IValidatedCredentials>;
-export function validCredentialsFunc(credentialObject: ICredentialObject, identifyByProviders: string[], web3Url: string): Promise<IValidatedCredentials>;
+export interface IRequestedCredentialKey {
+    key: string;
+    provider: string | string[];
+    name?: string;
+    required: boolean;
+    expectedValue?: string | boolean | number;
+}
+
+export interface IRequestedCredentials {
+    credentials: IRequestedCredentialKey[];
+    description: string;
+    by: string;
+    minimumRequired?: {
+        data: string[];
+        amount: number;
+    };
+}
+
+export interface IRequestedCredentialsCheckResult {
+    success: boolean;
+    missingKeys: IRequestedCredentialKey[];
+    missingMessage?: string;
+    credentials?: ICredentialObject;
+}
+
+export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[]): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
+export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string): Promise<IValidatedCredentials>;
 export function userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
 export function issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
 export function didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
@@ -161,6 +186,7 @@ export interface IValidatedCredentials {
     invalidCredentials?: ICredential[];
     message: string;
     valid: boolean;
+    requestedCheckResult?: IRequestedCredentialsCheckResult;
 }
 
 export interface ICredentialObject {

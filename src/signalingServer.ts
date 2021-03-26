@@ -262,7 +262,9 @@ export class SignalingServer {
                             if (clients.length === 1) {
                                 sendTo(clients[0], {
                                     type: 'leave',
-                                    success: true
+                                    success: true,
+                                    message: "Connection left on receive leave"
+                                    
                                 });
                                 clients[0].connected = null;
 
@@ -309,7 +311,8 @@ export class SignalingServer {
                     if (clients.length === 1) {
                         sendTo(clients[0], {
                             type: 'leave',
-                            success: true
+                            success: true,
+                            message: "Connection left on websocket close"
                         });
                         clients[0].connected = null;
                     }
