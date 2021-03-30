@@ -3,19 +3,20 @@ import { ICheckedDid } from "../interfaces/checkedDid.interface";
 import { ICredential } from "../interfaces/credential.interface";
 import { ICredentialObject } from "../interfaces/credentialsObject.interface";
 import { IProofObject } from "../interfaces/proof-object.interface";
+import { IProof } from "../interfaces/proof.interface";
 import { IRequestedCredentials } from "../interfaces/requestedCredentials.interface";
 import { IRequestedCredentialsCheckResult } from "../interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "../interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "../smartcontracts/claimHolderAbi";
 
-export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[]): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
+export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
     const web3 = new Web3(web3Url);
     const requestedCheckResult = requestedCredentialsCorrect(credentialObject, requestedCredentials);
     if (!requestedCheckResult.success) {
         requestedCheckResult.credentials = credentialObject;
         return requestedCheckResult;
     }
-    const result = await validCredentialsFunc(credentialObject, web3Url);
+    const result = await validCredentialsFunc(credentialObject, web3Url, checkUserNonce);
     // If the "normal" check was not valid, don't check the trusted parties but return the result
     if (!result.valid) {
         return result;
@@ -125,12 +126,14 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
 
 }
 
-export async function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string): Promise<IValidatedCredentials> {
+export async function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials> {
     // If the object is stringified
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
     }
+    console.log("before:", JSON.stringify(credentialObject));
     credentialObject = reOrderCredentialObject(credentialObject);
+    console.log("after:", JSON.stringify(credentialObject));
     const web3Node = new Web3(web3Url);
     const checkedDid: ICheckedDid[] = [];
     let validCredentialsAmount = 0;
@@ -162,56 +165,56 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
             const userRecoveredAddress = web3Node.eth.accounts.recover(JSON.stringify(credentialObjectWithoutProofSignature), credentialObject.credentials[provider].proof.signature);
             const then = new Date(credentialObject.credentials[provider].proof.nonce);
             const minutesDifference = calculateMinutesDifference(now, then);
-            if (minutesDifference <= 5) {
-                const correctUserSignature = userCredentialSignatureWrong(credentialObject.credentials[provider].proof.holder, userRecoveredAddress);
-                // Check if the user (Identity App) did sign it correct
-                if (correctUserSignature) {
-                    // Check if the sent credentials were provided by the did of the credential (check the signature of each credential)
-                    const correctIssuerSignature = issuerCredentialSignatureWrong(credential, web3Node);
-                    if (correctIssuerSignature) {
-                        // Check every credential DID contract if the holder belongs to that DID
-                        const issuerHolderKey = credential.proof.holder;
-                        const issuerDidContractAddress = credential.issuer.id.split(":")[2];
-                        const issuerCorrectDid = await didContractKeyWrong(web3Node, web3Url, claimHolderAbi, issuerHolderKey, issuerDidContractAddress, checkedDid);
-                        if (issuerCorrectDid) {
-                            const userHolderKey = credentialObject.credentials[provider].proof.holder;
-                            const userDidContractAddress = credential.id.split(":")[2];
-                            const userCorrectDid = await didContractKeyWrong(web3Node, web3Url, claimHolderAbi, userHolderKey, userDidContractAddress, checkedDid);
-                            if (userCorrectDid) {
-                                validCredentialsAmount++;
-                            } else {
-                                invalidCredentials.push({
-                                    credential,
-                                    code: 6,
-                                    message: "User did incorrect"
-                                });
-                            }
+            if (minutesDifference <= 5 && checkUserNonce) {
+                invalidCredentials.push({
+                    credential,
+                    code: 2,
+                    message: "Nonce too old"
+                });
+                continue;
+            }
+            const correctUserSignature = userCredentialSignatureWrong(credentialObject.credentials[provider].proof.holder, userRecoveredAddress);
+            // Check if the user (Identity App) did sign it correct
+            if (correctUserSignature) {
+                // Check if the sent credentials were provided by the did of the credential (check the signature of each credential)
+                const correctIssuerSignature = issuerCredentialSignatureWrong(credential, web3Node);
+                if (correctIssuerSignature) {
+                    // Check every credential DID contract if the holder belongs to that DID
+                    const issuerHolderKey = credential.proof.holder;
+                    const issuerDidContractAddress = credential.issuer.id.split(":")[2];
+                    const issuerCorrectDid = await didContractKeyWrong(web3Node, web3Url, claimHolderAbi, issuerHolderKey, issuerDidContractAddress, checkedDid);
+                    if (issuerCorrectDid) {
+                        const userHolderKey = credentialObject.credentials[provider].proof.holder;
+                        const userDidContractAddress = credential.id.split(":")[2];
+                        const userCorrectDid = await didContractKeyWrong(web3Node, web3Url, claimHolderAbi, userHolderKey, userDidContractAddress, checkedDid);
+                        if (userCorrectDid) {
+                            validCredentialsAmount++;
                         } else {
                             invalidCredentials.push({
                                 credential,
-                                code: 5,
-                                message: "Issuer did incorrect"
+                                code: 6,
+                                message: "User did incorrect"
                             });
                         }
                     } else {
                         invalidCredentials.push({
                             credential,
-                            code: 4,
-                            message: "Issuer signature incorrect"
+                            code: 5,
+                            message: "Issuer did incorrect"
                         });
                     }
                 } else {
                     invalidCredentials.push({
                         credential,
-                        code: 3,
-                        message: "User signature incorrect"
+                        code: 4,
+                        message: "Issuer signature incorrect"
                     });
                 }
             } else {
                 invalidCredentials.push({
                     credential,
-                    code: 2,
-                    message: "Nonce too old"
+                    code: 3,
+                    message: "User signature incorrect"
                 });
             }
         }
@@ -324,23 +327,26 @@ export function calculateMinutesDifference(dt2: Date, dt1: Date): number  {
 
 function reOrderCredentialObject(credential: ICredentialObject): ICredentialObject {
     // Get all provided providers
-    const providersArray = [];
-    for (const provider in credential) {
-        providersArray.push(provider);
-    }
-    providersArray.sort();
-
+    console.log("credential.credentials:", credential.credentials);
     // Loop every provider
-    for (const provider of providersArray) {
+    for (const provider of Object.keys(credential.credentials)) {
+        console.log("provider:", provider);
         const credentialKeys = [];
         // Get all credential keys
-        for (const credentialKey in credential[provider].credentials) {
+        for (const credentialKey in credential.credentials[provider].credentials) {
             credentialKeys.push(credentialKey);
         }
         credentialKeys.sort();
         // Loop the credential keys one by one and re order the credentials so its alphabetical
         for (const credentialKey of credentialKeys) {
-            credential[provider].credentials[credentialKey] = reOrderCredential(credential[provider].credentials[credentialKey]);
+            credential.credentials[provider].credentials[credentialKey] = reOrderCredential(credential.credentials[provider].credentials[credentialKey]);
+        }
+        console.log("credential[provider]:", credential.credentials[provider]);
+        console.log("credential[provider].proof:", credential.credentials[provider].proof);
+        credential.credentials[provider].proof = reOrderCredentialProof(credential.credentials[provider].proof);
+        credential.credentials[provider] = {
+            credentials: credential.credentials[provider].credentials,
+            proof: credential.credentials[provider].proof
         }
     }
     return credential;
@@ -374,6 +380,15 @@ function reOrderCredential(credential: ICredential): ICredential {
         verifiedCredential: credential.verifiedCredential,
         version: credential.version
     } as ICredential
+}
+
+export function reOrderCredentialProof(proof: IProof): IProof {
+    return {
+        holder: proof.holder,
+        nonce: proof.nonce,
+        signature: proof.signature,
+        type: proof.type
+    };
 }
 
 export function signCredential(credential: ICredential, privateKey: string) {
@@ -450,9 +465,6 @@ function reOrderProofObject(proofObject: IProofObject): IProofObject {
 }
 
 function requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult {
-    console.log("requestedCredentials:", requestedCredentials);
-    console.log("credentials:", credentials);
-
     let checkResult: IRequestedCredentialsCheckResult = {
         success: true,
         missingKeys: []

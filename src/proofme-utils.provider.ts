@@ -10,12 +10,12 @@ import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredenti
 @Injectable()
 export class ProofmeUtilsProvider {
 
-	async validCredentials(credentialObject: ICredentialObject, web3Url: string): Promise<IValidatedCredentials>  {
-        return validCredentialsFunc(credentialObject, web3Url);
+	async validCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials>  {
+        return validCredentialsFunc(credentialObject, web3Url, checkUserNonce);
     }
 
-	async validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[]): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>  {
-        return validCredentialsTrustedPartiesFunc(credentialObject, web3Url, requestedCredentials, trustedDids);
+	async validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>  {
+        return validCredentialsTrustedPartiesFunc(credentialObject, web3Url, requestedCredentials, trustedDids, checkUserNonce);
     }
 
     signCredential(credential: ICredential, privateKey: string): string  {
