@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import { ICheckedDid } from "../interfaces/checkedDid.interface";
 import { ICredential } from "../interfaces/credential.interface";
+import { ICredentialKeyObject } from "../interfaces/credentialKeyObject.interface";
 import { ICredentialObject } from "../interfaces/credentialsObject.interface";
 import { IProofObject } from "../interfaces/proof-object.interface";
 import { IProof } from "../interfaces/proof.interface";
@@ -131,51 +132,58 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
     }
-    console.log("before:", JSON.stringify(credentialObject));
+    console.log("before reOrderCredentialObject:", JSON.stringify(credentialObject));
     credentialObject = reOrderCredentialObject(credentialObject);
-    console.log("after:", JSON.stringify(credentialObject));
+    console.log("after reOrderCredentialObject:", JSON.stringify(credentialObject));
     const web3Node = new Web3(web3Url);
     const checkedDid: ICheckedDid[] = [];
     let validCredentialsAmount = 0;
     let credentialsAmount = 0;
     let invalidCredentials = [];
     for (const [provider, ] of Object.entries(credentialObject.credentials)) {
-        for (const [, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
-            credentialsAmount++;
-            if (!credential.version) {
-                invalidCredentials.push({
-                    credential,
-                    code: 8,
-                    message: "Incorrect credential version. Renew your credentials"
-                });
-                continue;
+        // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
+        // that specific provider (which we generated the signature over)
+        const credentialObjectWithoutProofSignature: ICredentialObject = {
+            credentials: {
+                [provider]: JSON.parse(JSON.stringify(credentialObject.credentials[provider]))
             }
-            const credentialExpirationDate = new Date(credential.expirationDate);
-            const now = new Date();
-            if (now > credentialExpirationDate) {
-                invalidCredentials.push({
-                    credential,
-                    code: 7,
-                    message: `Your credential expired on ${credentialExpirationDate}`
-                });
-                continue;
-            }
-            const credentialObjectWithoutProofSignature = JSON.parse(JSON.stringify(credentialObject.credentials[provider]));
-            delete credentialObjectWithoutProofSignature.proof.signature;
-            const userRecoveredAddress = web3Node.eth.accounts.recover(JSON.stringify(credentialObjectWithoutProofSignature), credentialObject.credentials[provider].proof.signature);
-            const then = new Date(credentialObject.credentials[provider].proof.nonce);
-            const minutesDifference = calculateMinutesDifference(now, then);
-            if (minutesDifference <= 5 && checkUserNonce) {
-                invalidCredentials.push({
-                    credential,
-                    code: 2,
-                    message: "Nonce too old"
-                });
-                continue;
-            }
-            const correctUserSignature = userCredentialSignatureWrong(credentialObject.credentials[provider].proof.holder, userRecoveredAddress);
-            // Check if the user (Identity App) did sign it correct
-            if (correctUserSignature) {
+        }
+        delete credentialObjectWithoutProofSignature.credentials[provider].proof.signature;
+        console.log("RECOVERING THIS OBJECT:", JSON.stringify(credentialObjectWithoutProofSignature));
+        const userRecoveredAddress = web3Node.eth.accounts.recover(JSON.stringify(credentialObjectWithoutProofSignature), credentialObject.credentials[provider].proof.signature);
+        const correctUserSignature = userCredentialSignatureWrong(credentialObject.credentials[provider].proof.holder, userRecoveredAddress);
+        // Check if the user (Identity App) did sign it correct; otherwhise skip this provider
+        if (correctUserSignature) {
+            for (const [, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
+                credentialsAmount++;
+                if (!credential.version) {
+                    invalidCredentials.push({
+                        credential,
+                        code: 8,
+                        message: "Incorrect credential version. Renew your credentials"
+                    });
+                    continue;
+                }
+                const credentialExpirationDate = new Date(credential.expirationDate);
+                const now = new Date();
+                if (now > credentialExpirationDate) {
+                    invalidCredentials.push({
+                        credential,
+                        code: 7,
+                        message: `Your credential expired on ${credentialExpirationDate}`
+                    });
+                    continue;
+                }
+                const then = new Date(credentialObject.credentials[provider].proof.nonce);
+                const minutesDifference = calculateMinutesDifference(now, then);
+                if (minutesDifference > 5 && checkUserNonce) {
+                    invalidCredentials.push({
+                        credential,
+                        code: 2,
+                        message: "Nonce too old"
+                    });
+                    continue;
+                }
                 // Check if the sent credentials were provided by the did of the credential (check the signature of each credential)
                 const correctIssuerSignature = issuerCredentialSignatureWrong(credential, web3Node);
                 if (correctIssuerSignature) {
@@ -210,18 +218,20 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
                         message: "Issuer signature incorrect"
                     });
                 }
-            } else {
-                invalidCredentials.push({
-                    credential,
-                    code: 3,
-                    message: "User signature incorrect"
-                });
             }
+
+        } else {
+            invalidCredentials.push({
+                credential: credentialObject.credentials[provider],
+                code: 3,
+                message: "User signature incorrect"
+            });
         }
     }
     console.log("only cred validCredentialsAmount:", validCredentialsAmount);
     console.log("only cred credentialsAmount:", credentialsAmount);
-    if (validCredentialsAmount === credentialsAmount) {
+    // When the user signature is incorrect we don't validate any more when there is 1 provider so credentialsamount should be more than 0
+    if (credentialsAmount > 0 && validCredentialsAmount === credentialsAmount) {
         return {
             credentials: credentialObject.credentials as any,
             valid: true,
@@ -325,31 +335,41 @@ export function calculateMinutesDifference(dt2: Date, dt1: Date): number  {
     return Math.abs(Math.round(diff));
 }
 
-function reOrderCredentialObject(credential: ICredentialObject): ICredentialObject {
-    // Get all provided providers
-    console.log("credential.credentials:", credential.credentials);
+function reOrderCredentialObject(credentialObject: ICredentialObject): ICredentialObject {
+    console.log("reOrderCredentialObject:", credentialObject);
+    console.log("All providers:", Object.keys(credentialObject.credentials));
     // Loop every provider
-    for (const provider of Object.keys(credential.credentials)) {
-        console.log("provider:", provider);
+    for (const provider of Object.keys(credentialObject.credentials)) {
+        console.log("reOrderCredentialObject provider:", provider);
         const credentialKeys = [];
+        console.log("credentialObject.credentials:", credentialObject.credentials);
+        console.log("credentialObject.credentials[provider]:", credentialObject.credentials[provider]);
+        console.log("credentialObject.credentials[provider].credentials:", credentialObject.credentials[provider].credentials);
+        console.log("Object.keys(credentialObject.credentials[provider].credentials):", Object.keys(credentialObject.credentials[provider].credentials));
         // Get all credential keys
-        for (const credentialKey in credential.credentials[provider].credentials) {
+        for (const credentialKey of Object.keys(credentialObject.credentials[provider].credentials)) {
+            console.log("credentialKey:", credentialKey);
             credentialKeys.push(credentialKey);
         }
+        console.log("before sort credentialKeys:", credentialKeys);
         credentialKeys.sort();
+        console.log("after sort credentialKeys:", credentialKeys);
+        const reOrderedCredentials = {};
         // Loop the credential keys one by one and re order the credentials so its alphabetical
         for (const credentialKey of credentialKeys) {
-            credential.credentials[provider].credentials[credentialKey] = reOrderCredential(credential.credentials[provider].credentials[credentialKey]);
+            const reOrderedCredential = reOrderCredential(credentialObject.credentials[provider].credentials[credentialKey]);
+            console.log("reOrderedCredential:", reOrderedCredential);
+            reOrderedCredentials[credentialKey] = reOrderedCredential;
         }
-        console.log("credential[provider]:", credential.credentials[provider]);
-        console.log("credential[provider].proof:", credential.credentials[provider].proof);
-        credential.credentials[provider].proof = reOrderCredentialProof(credential.credentials[provider].proof);
-        credential.credentials[provider] = {
-            credentials: credential.credentials[provider].credentials,
-            proof: credential.credentials[provider].proof
+        console.log("reOrderedCredentials:", reOrderedCredentials);
+        console.log("reOrderCredentialObject credential[provider].proof:", credentialObject.credentials[provider].proof);
+        credentialObject.credentials[provider].proof = reOrderCredentialProof(credentialObject.credentials[provider].proof);
+        credentialObject.credentials[provider] = {
+            credentials: reOrderedCredentials,
+            proof: credentialObject.credentials[provider].proof
         }
     }
-    return credential;
+    return credentialObject;
 }
 
 function reOrderCredential(credential: ICredential): ICredential {
@@ -377,7 +397,6 @@ function reOrderCredential(credential: ICredential): ICredential {
         },
         provider: credential.provider,
         type: credential.type,
-        verifiedCredential: credential.verifiedCredential,
         version: credential.version
     } as ICredential
 }
@@ -401,14 +420,17 @@ export function signCredential(credential: ICredential, privateKey: string) {
     return web3.eth.accounts.sign(JSON.stringify(credential), privateKey).signature
 };
 
-export function signCredentialObject(credential: ICredentialObject, privateKey: string) {
+export function signCredentialObject(credentialObject: ICredentialObject, privateKey: string) {
     // If the object is stringified
-    if (typeof credential === "string") {
-        credential = JSON.parse(credential);
+    if (typeof credentialObject === "string") {
+        credentialObject = JSON.parse(credentialObject);
     }
-    credential = reOrderCredentialObject(credential);
+    console.log("before signCredentialObject:", JSON.stringify(credentialObject));
+    credentialObject = reOrderCredentialObject(credentialObject);
+    console.log("after signCredentialObject:", JSON.stringify(credentialObject));
     const web3 = new Web3();
-    return web3.eth.accounts.sign(JSON.stringify(credential), privateKey).signature
+    console.log("SIGNING THIS OBJECT:", JSON.stringify(credentialObject));
+    return web3.eth.accounts.sign(JSON.stringify(credentialObject), privateKey).signature
 };
 
 export async function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any> {

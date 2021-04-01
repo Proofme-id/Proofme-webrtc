@@ -151,8 +151,8 @@ export interface IRequestedCredentialKey {
 
 export interface IRequestedCredentials {
     credentials: IRequestedCredentialKey[];
-    description: string;
-    by: string;
+    description?: string;
+    by?: string;
     minimumRequired?: {
         data: string[];
         amount: number;
@@ -177,7 +177,7 @@ export function getKeyPurpose(keyManagerContract: any, key: string): Promise<str
 export function calculateMinutesDifference(dt2: Date, dt1: Date): number;
 export function reOrderCredentialProof(proof: IProof): IProof;
 export function signCredential(credential: ICredential, privateKey: string): string;
-export function signCredentialObject(credential: ICredentialObject, privateKey: string): string;
+export function signCredentialObject(credentialObject: ICredentialObject, privateKey: string): string;
 export function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
 export function signProofObject(proofObject: IProofObject, privateKey: string): string;
 
@@ -192,7 +192,7 @@ export interface IValidatedCredentials {
 
 export interface ICredentialObject {
     credentials: {
-        [provider: string]: IIdentifyItem;
+        [provider: string]: ICredentialKeyObject;
     };
 }
 
@@ -230,7 +230,7 @@ export interface ICheckedDid {
     result: boolean;
 }
 
-export interface IIdentifyItem {
+export interface ICredentialKeyObject {
     credentials: {
         [key: string]: ICredential;
     };
