@@ -17,12 +17,13 @@
     "lint:fix": "eslint . --fix --ext .ts"
   },
   "dependencies": {
-    "@types/uuid": "^8.3.0",
     "@angular/core": "10.2.1",
+    "@types/uuid": "^8.3.0",
     "bignumber.js": "^9.0.1",
     "rxjs": "6.6.3",
-    "websocket": "^1.0.32",
+    "uuid": "^8.3.2",
     "web3": "1.2.5",
+    "websocket": "^1.0.32",
     "wrtc": "^0.4.6"
   },
   "devDependencies": {

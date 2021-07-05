@@ -94,19 +94,9 @@ export class ProofmeUtilsProvider {
     signProofObject(proofObject: IProofObject, privateKey: string): string;
 }
 
-export interface IRTCConnectionConfig {
-    stunEnabled: boolean;
-    stunUrl: string;
-    turnEnabled: boolean;
-    turnUrl: string;
-    turnSecret: string;
-    turnExpiration: number;
-}
 
-export interface IWebRTCConfig {
-    signalingUrl: string;
-    isHost: boolean;
-}
+
+
 
 export interface IProofObject {
     credentialSubject: {
@@ -157,12 +147,7 @@ export interface IRequestedCredentials {
     };
 }
 
-export interface IRequestedCredentialsCheckResult {
-    success: boolean;
-    missingKeys: IRequestedCredentialKey[];
-    missingMessage?: string;
-    credentials?: ICredentialObject;
-}
+
 
 export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
 export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials>;
@@ -180,14 +165,7 @@ export function getClaims(claimType: number | string, contractAddress: string, w
 export function signProofObject(proofObject: IProofObject, privateKey: string): string;
 export function reOrderProofObject(proofObject: IProofObject): IProofObject;
 
-export interface IValidatedCredentials {
-    code: number;
-    credentials?: ICredentialObject;
-    invalidCredentials?: ICredential[];
-    message: string;
-    valid: boolean;
-    requestedCheckResult?: IRequestedCredentialsCheckResult;
-}
+
 
 export interface ICredentialObject {
     credentials: {
