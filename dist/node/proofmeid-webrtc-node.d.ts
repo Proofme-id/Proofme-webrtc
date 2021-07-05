@@ -94,7 +94,14 @@ export class ProofmeUtilsProvider {
     signProofObject(proofObject: IProofObject, privateKey: string): string;
 }
 
-
+export interface IRTCConnectionConfig {
+    stunEnabled: boolean;
+    stunUrl: string;
+    turnEnabled: boolean;
+    turnUrl: string;
+    turnSecret: string;
+    turnExpiration: number;
+}
 
 export interface IWebRTCConfig {
     signalingUrl: string;
