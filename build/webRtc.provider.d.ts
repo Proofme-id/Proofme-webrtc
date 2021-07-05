@@ -1,6 +1,6 @@
 /// <reference types="node" />
-import { BehaviorSubject } from 'rxjs';
-import { IWebRTCConfig } from './interfaces/webRtcConfig.interface';
+import { BehaviorSubject } from "rxjs";
+import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 export declare class WebRtcProvider {
     webRtcConfig: IWebRTCConfig;
     hostUuid: string;
@@ -14,7 +14,6 @@ export declare class WebRtcProvider {
     websocketConnectionError$: BehaviorSubject<any>;
     webRtcConnectionConfig: RTCConfiguration;
     connectionTimeout: NodeJS.Timeout;
-    constructor();
     /**
      * Returns the WebRTC configuration
      */

@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { IWebRTCConfig } from './interfaces/webRtcConfig.interface';
+import { Injectable } from "@angular/core";
+import { BehaviorSubject } from "rxjs";
+import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 
 @Injectable()
 export class WebRtcProvider {
@@ -16,8 +16,6 @@ export class WebRtcProvider {
     websocketConnectionError$ = new BehaviorSubject(null); // Whenever there is an error event on the websocket, this observable will emit
     webRtcConnectionConfig: RTCConfiguration;
     connectionTimeout: NodeJS.Timeout = null;
-
-    constructor() {}
 
     /**
      * Returns the WebRTC configuration
@@ -40,7 +38,7 @@ export class WebRtcProvider {
      * @param data The data to send as an object
      */
     sendData(action: string, data: any) {
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+        if (this.dataChannel && this.dataChannel.readyState === "open") {
             this.dataChannel.send(JSON.stringify({ action, ...data }));
         } else {
             console.log(`Attempted to send data with action ${action} but data channel is not open`);
@@ -81,10 +79,10 @@ export class WebRtcProvider {
      * Disconnect on this application and send a disconnect event over the datachannel
      */
     remoteDisconnect() {
-        console.log('datachannel:', this.dataChannel);
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+        console.log("datachannel:", this.dataChannel);
+        if (this.dataChannel && this.dataChannel.readyState === "open") {
             console.log("Data channel sending disconnect");
-            this.dataChannel.send(JSON.stringify({action: 'disconnect'}));
+            this.dataChannel.send(JSON.stringify({action: "disconnect"}));
         }
         console.log("Waiting 1 second for client disconnect");
         // TODO: Is one second enough?
@@ -103,7 +101,7 @@ export class WebRtcProvider {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         wsClient.send(JSON.stringify({
-            type: 'offer',
+            type: "offer",
             offer
         }));
     }
@@ -113,9 +111,12 @@ export class WebRtcProvider {
      */
     async launchWebsocketClient(webRtcConfig: IWebRTCConfig) {
         this.webRtcConfig = webRtcConfig;
-        const RTCSessionDescription = require('wrtc').RTCSessionDescription;
-        const RTCIceCandidate = require('wrtc').RTCIceCandidate;
-        const W3CWebSocket = require('websocket').w3cwebsocket;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const RTCSessionDescription = require("wrtc").RTCSessionDescription;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const RTCIceCandidate = require("wrtc").RTCIceCandidate;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const W3CWebSocket = require("websocket").w3cwebsocket;
 
         let connectionSuccess = null;
         this.receivedActions$ = new BehaviorSubject(null);
@@ -129,10 +130,10 @@ export class WebRtcProvider {
 
         let signalingUrl = this.webRtcConfig.signalingUrl;
         if (!signalingUrl) {
-            console.log('signalingUrl undefined, falling back to default');
-            signalingUrl = 'wss://auth.proofme.id';
+            console.log("signalingUrl undefined, falling back to default");
+            signalingUrl = "wss://auth.proofme.id";
         }
-        console.log('Connecting to signaling server:', signalingUrl);
+        console.log("Connecting to signaling server:", signalingUrl);
         this.wsClient = new W3CWebSocket(signalingUrl);
         // So if there is not a success connection after 10 seconds, close the socket and send an error
         this.connectionTimeout = setTimeout(() => {
@@ -142,19 +143,19 @@ export class WebRtcProvider {
             }
         }, 10000);
         this.wsClient.onerror = (error => {
-            console.log('Websocket error: ' + error.toString());
+            console.log("Websocket error: " + error.toString());
             connectionSuccess = false;
             this.websocketConnectionClosed$.next(true);
             this.websocketConnectionOpen$.next(false);
             this.websocketConnectionError$.next(true);
         });
         this.wsClient.onclose = (() => {
-            console.log('Websocket connection closed');
+            console.log("Websocket connection closed");
             this.websocketConnectionClosed$.next(true);
             this.websocketConnectionOpen$.next(false);
         });
         this.wsClient.onopen = (() => {
-            console.log('Websocket connection open');
+            console.log("Websocket connection open");
             connectionSuccess = true;
             this.websocketConnectionClosed$.next(false);
             this.websocketConnectionOpen$.next(true);
@@ -167,22 +168,22 @@ export class WebRtcProvider {
                 try {
                     data = JSON.parse(msg.data);
                 } catch (e) {
-                    console.log('Websocket onmessage ERROR: Invalid JSON');
+                    console.log("Websocket onmessage ERROR: Invalid JSON");
                     data = {};
                 }
                 const { type, message, success, uuid, offer, answer, candidate, webRtcConnectionConfig } = data;
 
                 switch (type) {
-                    case 'error':
+                    case "error":
                         // On an error
-                        console.log('Websocket onmessage error: ', message);
+                        console.log("Websocket onmessage error: ", message);
                         break;
-                    case 'connect':
-                        console.log('Websocket connect success:', success);
+                    case "connect":
+                        console.log("Websocket connect success:", success);
                         // When connected to the Signaling service
                         if (success) {
                             if (this.webRtcConfig.isHost) {
-                                console.log('Websocket connect is host');
+                                console.log("Websocket connect is host");
                                 const maxTries = 500;
                                 let tries = 0;
                                 const interval = setInterval(() => {
@@ -192,7 +193,7 @@ export class WebRtcProvider {
                                     if (this.wsClient && this.wsClient.readyState === 1 && tries < maxTries) {
                                         clearInterval(interval);
                                         // if the application is the host, send a host request to receive a UUID
-                                        this.wsClient.send(JSON.stringify({ type: 'host' }));
+                                        this.wsClient.send(JSON.stringify({ type: "host" }));
                                     }
                                     if (tries >= maxTries) {
                                         clearInterval(interval);
@@ -200,7 +201,7 @@ export class WebRtcProvider {
                                     tries++;
                                 }, 50) 
                             } else {
-                                console.log('Websocket connect is not host');
+                                console.log("Websocket connect is not host");
                                 const maxTries = 500;
                                 let tries = 0;
                                 const interval = setInterval(async () => {
@@ -210,7 +211,7 @@ export class WebRtcProvider {
                                     if (this.wsClient && this.wsClient.readyState === 1 && tries < maxTries) {
                                         clearInterval(interval);
                                         // If the application is not the host, send a connect request with the host UUID
-                                        this.wsClient.send(JSON.stringify({ type: 'connect', host: this.hostUuid }));
+                                        this.wsClient.send(JSON.stringify({ type: "connect", host: this.hostUuid }));
                                     }
                                     if (tries >= maxTries) {
                                         clearInterval(interval);
@@ -219,11 +220,11 @@ export class WebRtcProvider {
                                 }, 50) 
                             }
                         } else {
-                            console.log('Websocket onmessage connect failure');
+                            console.log("Websocket onmessage connect failure");
                         }
                         break;
-                    case 'connected':
-                        console.log('webRtcConnectionConfig:', webRtcConnectionConfig);
+                    case "connected":
+                        console.log("webRtcConnectionConfig:", webRtcConnectionConfig);
                         if (webRtcConnectionConfig) {
                             this.webRtcConnectionConfig = webRtcConnectionConfig;
                             if (!this.webRtcConfig.isHost) {
@@ -232,11 +233,11 @@ export class WebRtcProvider {
                         }
                         // When the host received an UUID
                         if (uuid && this.webRtcConfig.isHost) {
-                            console.log('Websocket onmessage connected success with client uuid:', uuid);
+                            console.log("Websocket onmessage connected success with client uuid:", uuid);
                             await this.sendOffer(this.peerConnection, this.wsClient);
                         }
                         break;
-                    case 'offer':
+                    case "offer":
                         // If the application is not the host, it receives an offer whenever a client connects.
                         // The client will send an answer back
                         console.log("Received offer:", offer);
@@ -246,16 +247,16 @@ export class WebRtcProvider {
                             const hostAnswer = await this.peerConnection.createAnswer();
                             await this.peerConnection.setLocalDescription(hostAnswer);
                             this.wsClient.send(JSON.stringify({
-                                type: 'answer',
+                                type: "answer",
                                 answer: hostAnswer
                             }));
                         }
                         break;
-                    case 'host':
+                    case "host":
                         console.log("Received host");
                         // Whenever the host receives a host request back, set the UUID provided
                         if (uuid && this.webRtcConfig.isHost) {
-                            console.log('Websocket onmessage host waiting for user to connect to ' + uuid);
+                            console.log("Websocket onmessage host waiting for user to connect to " + uuid);
                             this.setUuid(uuid);
                             if (webRtcConnectionConfig) {
                                 this.webRtcConnectionConfig = webRtcConnectionConfig;
@@ -263,13 +264,13 @@ export class WebRtcProvider {
                             await this.setupPeerconnection(uuid);
                         }
                         break;
-                    case 'leave':
+                    case "leave":
                         // Whenever the host or client leaves setup a new connection
-                        console.log('Websocket onmessage leave host');
+                        console.log("Websocket onmessage leave host");
                         this.setUuid(null);
                         this.disconnect();
                         break;
-                    case 'answer':
+                    case "answer":
                         console.log("Received answer");
                         console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                         // The client will send an answer and the host will set it as a description
@@ -277,7 +278,7 @@ export class WebRtcProvider {
                             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
                         }
                         break;
-                    case 'candidate':
+                    case "candidate":
                         console.log("Received candidate from client!")
                         console.log("candidate:", candidate);
                         // On receiving an candidate from the client
@@ -288,7 +289,7 @@ export class WebRtcProvider {
                         break;
                     default:
                         // The default
-                        console.error('Websocket onmessage default');
+                        console.error("Websocket onmessage default");
                         break;
                 }
             }
@@ -301,12 +302,12 @@ export class WebRtcProvider {
      * @param uuid The UUID to connect to
      */
     async setupPeerconnection(uuid: string) {
-        console.log('setupPeerconnection with uuid:', uuid);
+        console.log("setupPeerconnection with uuid:", uuid);
         console.log("this.webRtcConnectionConfig:", this.webRtcConnectionConfig);
         this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
         this.dataChannel = this.peerConnection.createDataChannel(uuid);
 
-        this.peerConnection.addEventListener('datachannel', event => {
+        this.peerConnection.addEventListener("datachannel", event => {
             event.channel.onmessage = (async eventMessage => {
                 let data: any;
 
@@ -315,47 +316,47 @@ export class WebRtcProvider {
                     data = JSON.parse(eventMessage.data);
                     // By default this class will only handle the disconnect event. Close the websocket on this side.
                     switch (data.action) {
-                        case 'disconnect':
-                            console.log('peerConnection disconnect');
+                        case "disconnect":
+                            console.log("peerConnection disconnect");
                             this.disconnect();
                             break;
                     }
                     this.receivedActions$.next(data);
                 } catch (e) {
-                    console.log('peerConnection ERROR: Invalid JSON');
+                    console.log("peerConnection ERROR: Invalid JSON");
                     data = {};
                 }
             });
             event.channel.onopen = (eventMessage: any) => {
-                console.log('Sending p2p connected!');
-                this.receivedActions$.next({ action: 'p2pConnected', p2pConnected: true });
+                console.log("Sending p2p connected!");
+                this.receivedActions$.next({ action: "p2pConnected", p2pConnected: true });
                 console.log("p2p connected so close the websocket connection");
                 this.wsClient.close();
             };
         });
 
-        this.peerConnection.addEventListener('iceconnectionstatechange', event => {
+        this.peerConnection.addEventListener("iceconnectionstatechange", event => {
             console.log("event:", event);
             console.log("this.peerConnection.iceConnectionState:", this.peerConnection.iceConnectionState);
-            if (this.peerConnection.iceConnectionState === 'disconnected') {
-                this.receivedActions$.next({ action: 'p2pConnected', p2pConnected: false });
+            if (this.peerConnection.iceConnectionState === "disconnected") {
+                this.receivedActions$.next({ action: "p2pConnected", p2pConnected: false });
                 this.peerConnection.close();
-                this.wsClient.send(JSON.stringify({ type: 'leave' }));
+                this.wsClient.send(JSON.stringify({ type: "leave" }));
                 this.wsClient.close();
             }
         });
 
-        this.peerConnection.addEventListener('icecandidate', async event => {
+        this.peerConnection.addEventListener("icecandidate", async event => {
             if (event.candidate) {
-                console.log('**************** Received candidate over peer, sending to signaller');
-                console.log('Candidate', event.candidate);
+                console.log("**************** Received candidate over peer, sending to signaller");
+                console.log("Candidate", event.candidate);
                 try {
                     const candidate = new RTCIceCandidate(event.candidate);
                     await this.peerConnection.addIceCandidate(candidate);
                 } catch (e) {
-                    console.log('ooops', e);
+                    console.log("ooops", e);
                 }
-                this.wsClient.send(JSON.stringify({type: 'candidate', candidate: event.candidate}));
+                this.wsClient.send(JSON.stringify({type: "candidate", candidate: event.candidate}));
             }
         });
     }

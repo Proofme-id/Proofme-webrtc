@@ -19,6 +19,5 @@ export interface IProofObject {
     };
     txHash?: string;
     type: string[];
-    verifiedCredential?: boolean;
     version: string;
 }

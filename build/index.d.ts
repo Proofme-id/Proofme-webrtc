@@ -12,6 +12,7 @@ export { calculateMinutesDifference } from "./functions/functions";
 export { didContractKeyWrong } from "./functions/functions";
 export { getKeyPurpose } from "./functions/functions";
 export { getSha3Key } from "./functions/functions";
+export { reOrderProofObject } from "./functions/functions";
 export { issuerCredentialSignatureWrong } from "./functions/functions";
 export { knownAddressesContains } from "./functions/functions";
 export { userCredentialSignatureWrong } from "./functions/functions";

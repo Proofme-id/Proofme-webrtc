@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { IRTCConnectionConfig } from './interfaces/rtcConnectionConfig.interface';
+import { IRTCConnectionConfig } from "./interfaces/rtcConnectionConfig.interface";
 import * as http from "http";
 export declare class SignalingServer {
     wss: any;

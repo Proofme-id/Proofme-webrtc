@@ -1,7 +1,6 @@
 import Web3 from "web3";
 import { ICheckedDid } from "../interfaces/checkedDid.interface";
 import { ICredential } from "../interfaces/credential.interface";
-import { ICredentialKeyObject } from "../interfaces/credentialKeyObject.interface";
 import { ICredentialObject } from "../interfaces/credentialsObject.interface";
 import { IProofObject } from "../interfaces/proof-object.interface";
 import { IProof } from "../interfaces/proof.interface";
@@ -33,7 +32,7 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
         const checkedDid = [];
         let validCredentialsAmount = 0;
         let credentialsAmount = 0;
-        let invalidCredentials = [];
+        const invalidCredentials = [];
         for (const [provider, ] of Object.entries(credentialObject.credentials)) {
             for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
                 credentialsAmount++;
@@ -50,7 +49,6 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
                     } else {
                         claim = await getClaims(issuerDidContractAddress, did, web3);
                         checkedDid.push({issuerDidContractAddress, did, claim})
-                        claim = claim;
                     }
                     if (claim) {
                         noTrustedClaimFound = false;
@@ -139,7 +137,7 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
     const checkedDid: ICheckedDid[] = [];
     let validCredentialsAmount = 0;
     let credentialsAmount = 0;
-    let invalidCredentials = [];
+    const invalidCredentials = [];
     for (const [provider, ] of Object.entries(credentialObject.credentials)) {
         // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
         // that specific provider (which we generated the signature over)
@@ -418,7 +416,7 @@ export function signCredential(credential: ICredential, privateKey: string) {
     credential = reOrderCredential(credential);
     const web3 = new Web3();
     return web3.eth.accounts.sign(JSON.stringify(credential), privateKey).signature
-};
+}
 
 export function signCredentialObject(credentialObject: ICredentialObject, privateKey: string) {
     // If the object is stringified
@@ -431,7 +429,7 @@ export function signCredentialObject(credentialObject: ICredentialObject, privat
     const web3 = new Web3();
     console.log("SIGNING THIS OBJECT:", JSON.stringify(credentialObject));
     return web3.eth.accounts.sign(JSON.stringify(credentialObject), privateKey).signature
-};
+}
 
 export async function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any> {
     const contract = new web3.eth.Contract(claimHolderAbi, contractAddress);
@@ -459,9 +457,9 @@ export function signProofObject(proofObject: IProofObject, privateKey: string) {
     proofObject = reOrderProofObject(proofObject);
     const web3 = new Web3();
     return web3.eth.accounts.sign(JSON.stringify(proofObject), privateKey).signature
-};
+}
 
-function reOrderProofObject(proofObject: IProofObject): IProofObject {
+export function reOrderProofObject(proofObject: IProofObject): IProofObject {
     return {
         credentialSubject: {
             credential: {
@@ -487,7 +485,7 @@ function reOrderProofObject(proofObject: IProofObject): IProofObject {
 }
 
 function requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult {
-    let checkResult: IRequestedCredentialsCheckResult = {
+    const checkResult: IRequestedCredentialsCheckResult = {
         success: true,
         missingKeys: []
     }

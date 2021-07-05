@@ -13,7 +13,7 @@ module.exports = (env) => {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
+                use: "ts-loader",
                 exclude: /node_modules/
             }
         ]
@@ -21,7 +21,7 @@ module.exports = (env) => {
 
     // Define shared resolve definition
     let resolve = {
-        extensions: ['.tsx', '.ts', '.js']
+        extensions: [".tsx", ".ts", ".js"]
     };
 
     // Make sure all node_modules are marked as external
@@ -29,12 +29,12 @@ module.exports = (env) => {
     // they would be included in the single file output.
     // This greatly confuses node libraries...
     let nodeExternals = {};
-    fs.readdirSync('node_modules')
+    fs.readdirSync("node_modules")
         .filter(function (x) {
-            return ['.bin'].indexOf(x) === -1;
+            return [".bin"].indexOf(x) === -1;
         })
         .forEach(function (mod) {
-            nodeExternals[mod] = 'commonjs ' + mod;
+            nodeExternals[mod] = "commonjs " + mod;
         }
     );
 
@@ -73,7 +73,7 @@ module.exports = (env) => {
             resolve: resolve,
             mode: mode,
             node: {
-                fs: 'empty'
+                fs: "empty"
             },
             stats: "errors-only",
             devtool: mode == "development" ? "inline-source-map" : "source-map",
@@ -91,7 +91,8 @@ module.exports = (env) => {
                 filename: "proofmeid-webrtc-web.js",
                 path: path.resolve(__dirname, "dist/web")
             },
-            watch: watch
+            watch: watch,
+            externals: nodeExternals
         }
     ]
 }

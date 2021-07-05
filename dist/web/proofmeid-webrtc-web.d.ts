@@ -5,7 +5,7 @@
 //   ../web3
 
 import * as http from "http";
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from "rxjs";
 import Web3 from "web3";
 
 export class SignalingServer {
@@ -40,7 +40,6 @@ export class WebRtcProvider {
         websocketConnectionError$: BehaviorSubject<any>;
         webRtcConnectionConfig: RTCConfiguration;
         connectionTimeout: NodeJS.Timeout;
-        constructor();
         /**
             * Returns the WebRTC configuration
             */
@@ -130,7 +129,6 @@ export interface IProofObject {
     };
     txHash?: string;
     type: string[];
-    verifiedCredential?: boolean;
     version: string;
 }
 
@@ -180,6 +178,7 @@ export function signCredential(credential: ICredential, privateKey: string): str
 export function signCredentialObject(credentialObject: ICredentialObject, privateKey: string): string;
 export function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
 export function signProofObject(proofObject: IProofObject, privateKey: string): string;
+export function reOrderProofObject(proofObject: IProofObject): IProofObject;
 
 export interface IValidatedCredentials {
     code: number;

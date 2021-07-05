@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+      "allowSyntheticDefaultImports": true,
+      "declaration": false,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "lib": [
+        "dom",
+        "es2015"
+      ],
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "sourceMap": true,
+      "target": "es6",
+      "outDir": "build",
+      "noUnusedLocals": true,
+      "skipLibCheck": true
+    },
+    "exclude": [
+      "node_modules",
+      "src/**/*.spec.ts"
+    ],
+    "compileOnSave": false
+  }
+  
