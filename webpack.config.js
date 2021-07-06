@@ -81,7 +81,7 @@ module.exports = (env) => {
                 new DtsBundlePlugin("proofmeid-webrtc-web", "../dist/web/proofmeid-webrtc-web.d.ts"),
                 new webpack.DefinePlugin({
                     "process.env": {
-                        TARGET: "'web'"
+                        TARGET: "'node'"
                     }
                 })
             ],

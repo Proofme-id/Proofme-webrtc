@@ -1,6 +1,8 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
+import { RTCSessionDescription, RTCIceCandidate } from "wrtc";
+import { w3cwebsocket } from "websocket";
 
 @Injectable()
 export class WebRtcProvider {
@@ -111,12 +113,8 @@ export class WebRtcProvider {
      */
     async launchWebsocketClient(webRtcConfig: IWebRTCConfig) {
         this.webRtcConfig = webRtcConfig;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const RTCSessionDescription = require("wrtc").RTCSessionDescription;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const RTCIceCandidate = require("wrtc").RTCIceCandidate;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const W3CWebSocket = require("websocket").w3cwebsocket;
+
+        // const W3CWebSocket = require("websocket").w3cwebsocket;
 
         let connectionSuccess = null;
         this.receivedActions$ = new BehaviorSubject(null);
@@ -134,7 +132,7 @@ export class WebRtcProvider {
             signalingUrl = "wss://auth.proofme.id";
         }
         console.log("Connecting to signaling server:", signalingUrl);
-        this.wsClient = new W3CWebSocket(signalingUrl);
+        this.wsClient = new w3cwebsocket(signalingUrl);
         // So if there is not a success connection after 10 seconds, close the socket and send an error
         this.connectionTimeout = setTimeout(() => {
             if (connectionSuccess !== true) {

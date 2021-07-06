@@ -12,7 +12,7 @@
       "module": "commonjs",
       "moduleResolution": "node",
       "sourceMap": true,
-      "target": "es6",
+      "target": "esnext",
       "outDir": "build"
     },
     "include": [

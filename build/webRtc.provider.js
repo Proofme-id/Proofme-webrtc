@@ -18,6 +18,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebRtcProvider = void 0;
 const core_1 = require("@angular/core");
 const rxjs_1 = require("rxjs");
+const wrtc_1 = require("wrtc");
+const websocket_1 = require("websocket");
 let WebRtcProvider = class WebRtcProvider {
     constructor() {
         this.peerConnection = null; // The peer connection between client and host
@@ -121,12 +123,6 @@ let WebRtcProvider = class WebRtcProvider {
     launchWebsocketClient(webRtcConfig) {
         return __awaiter(this, void 0, void 0, function* () {
             this.webRtcConfig = webRtcConfig;
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const RTCSessionDescription = require("wrtc").RTCSessionDescription;
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const RTCIceCandidate = require("wrtc").RTCIceCandidate;
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const W3CWebSocket = require("websocket").w3cwebsocket;
             let connectionSuccess = null;
             this.receivedActions$ = new rxjs_1.BehaviorSubject(null);
             if (this.connectionTimeout) {
@@ -142,7 +138,7 @@ let WebRtcProvider = class WebRtcProvider {
                 signalingUrl = "wss://auth.proofme.id";
             }
             console.log("Connecting to signaling server:", signalingUrl);
-            this.wsClient = new W3CWebSocket(signalingUrl);
+            this.wsClient = new websocket_1.w3cwebsocket(signalingUrl);
             // So if there is not a success connection after 10 seconds, close the socket and send an error
             this.connectionTimeout = setTimeout(() => {
                 if (connectionSuccess !== true) {
@@ -252,7 +248,7 @@ let WebRtcProvider = class WebRtcProvider {
                             console.log("Received offer:", offer);
                             console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                             if (offer && !this.webRtcConfig.isHost) {
-                                yield this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                                yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(offer));
                                 const hostAnswer = yield this.peerConnection.createAnswer();
                                 yield this.peerConnection.setLocalDescription(hostAnswer);
                                 this.wsClient.send(JSON.stringify({
@@ -284,7 +280,7 @@ let WebRtcProvider = class WebRtcProvider {
                             console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                             // The client will send an answer and the host will set it as a description
                             if (answer && this.webRtcConfig.isHost) {
-                                yield this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                                yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(answer));
                             }
                             break;
                         case "candidate":
@@ -292,7 +288,7 @@ let WebRtcProvider = class WebRtcProvider {
                             console.log("candidate:", candidate);
                             // On receiving an candidate from the client
                             if (candidate) {
-                                const clientCandidate = new RTCIceCandidate(candidate);
+                                const clientCandidate = new wrtc_1.RTCIceCandidate(candidate);
                                 yield this.peerConnection.addIceCandidate(clientCandidate);
                             }
                             break;
@@ -358,7 +354,7 @@ let WebRtcProvider = class WebRtcProvider {
                     console.log("**************** Received candidate over peer, sending to signaller");
                     console.log("Candidate", event.candidate);
                     try {
-                        const candidate = new RTCIceCandidate(event.candidate);
+                        const candidate = new wrtc_1.RTCIceCandidate(event.candidate);
                         yield this.peerConnection.addIceCandidate(candidate);
                     }
                     catch (e) {

@@ -10,6 +10,9 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
+  "env": {
+    "node": true
+  },
   "rules": {
     "no-console": 0,
     "no-loops/no-loops": 0,
