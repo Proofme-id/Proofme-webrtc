@@ -129,6 +129,7 @@ export interface IProofObject {
     };
     txHash?: string;
     type: string[];
+    verified?: boolean;
     version: string;
 }
 
@@ -220,6 +221,7 @@ export interface ICredential {
     provider: string;
     type: string[];
     verifiedCredential?: boolean;
+    verified?: boolean;
     version: string;
 }
 

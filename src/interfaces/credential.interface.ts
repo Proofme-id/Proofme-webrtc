@@ -23,5 +23,6 @@ export interface ICredential {
     provider: string;
     type: string[];
     verifiedCredential?: boolean;
+    verified?: boolean;
     version: string;
 }

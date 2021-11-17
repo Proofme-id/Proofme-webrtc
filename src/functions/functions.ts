@@ -8,6 +8,7 @@ import { IRequestedCredentials } from "../interfaces/requestedCredentials.interf
 import { IRequestedCredentialsCheckResult } from "../interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "../interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "../smartcontracts/claimHolderAbi";
+import semver from "semver";
 
 export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
     const web3 = new Web3(web3Url);
@@ -33,7 +34,7 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
         let validCredentialsAmount = 0;
         let credentialsAmount = 0;
         const invalidCredentials = [];
-        for (const [provider, ] of Object.entries(credentialObject.credentials)) {
+        for (const [provider,] of Object.entries(credentialObject.credentials)) {
             for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
                 credentialsAmount++;
                 const issuerDidContractAddress = credential.issuer.id.split(":")[2];
@@ -48,7 +49,7 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
                         claim = foundEntry.claim;
                     } else {
                         claim = await getClaims(issuerDidContractAddress, did, web3);
-                        checkedDid.push({issuerDidContractAddress, did, claim})
+                        checkedDid.push({ issuerDidContractAddress, did, claim })
                     }
                     if (claim) {
                         noTrustedClaimFound = false;
@@ -138,7 +139,7 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
     let validCredentialsAmount = 0;
     let credentialsAmount = 0;
     const invalidCredentials = [];
-    for (const [provider, ] of Object.entries(credentialObject.credentials)) {
+    for (const [provider,] of Object.entries(credentialObject.credentials)) {
         // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
         // that specific provider (which we generated the signature over)
         const credentialObjectWithoutProofSignature: ICredentialObject = {
@@ -296,7 +297,7 @@ export async function didContractKeyWrong(web3Node: any, web3Url: string, claimH
                     checkedDid.push({ did: didAddress, holderKey, result: false });
                     return false;
                 }
-                knownAddresses.push({sha3Key, didAddress});
+                knownAddresses.push({ sha3Key, didAddress });
             }
             checkedDid.push({ did: didAddress, holderKey, result: true });
             return true;
@@ -327,7 +328,7 @@ export async function getKeyPurpose(keyManagerContract: any, key: string): Promi
     }
 }
 
-export function calculateMinutesDifference(dt2: Date, dt1: Date): number  {
+export function calculateMinutesDifference(dt2: Date, dt1: Date): number {
     let diff = (dt2.getTime() - dt1.getTime()) / 1000;
     diff /= 60;
     return Math.abs(Math.round(diff));
@@ -371,32 +372,64 @@ function reOrderCredentialObject(credentialObject: ICredentialObject): ICredenti
 }
 
 function reOrderCredential(credential: ICredential): ICredential {
-    return {
-        credentialSubject: {
-            credential: {
-                type: credential.credentialSubject.credential.type,
-                value: credential.credentialSubject.credential.value
-            }
-        },
-        expirationDate: credential.expirationDate,
-        id: credential.id,
-        issuanceDate: credential.issuanceDate,
-        issuer: {
-            authorityId: credential.issuer.authorityId,
-            authorityName: credential.issuer.authorityName,
-            id: credential.issuer.id,
-            name: credential.issuer.name
-        },
-        proof: {
-            holder: credential.proof.holder,
-            nonce: credential.proof.nonce,
-            signature: credential.proof.signature,
-            type: credential.proof.type
-        },
-        provider: credential.provider,
-        type: credential.type,
-        version: credential.version
-    } as ICredential
+    if (semver.gt(credential.version, "1.0.0")) {
+        console.log("reOrderCredential version higher than 1.0.0");
+        return {
+            credentialSubject: {
+                credential: {
+                    type: credential.credentialSubject.credential.type,
+                    value: credential.credentialSubject.credential.value
+                }
+            },
+            expirationDate: credential.expirationDate,
+            id: credential.id,
+            issuanceDate: credential.issuanceDate,
+            issuer: {
+                authorityId: credential.issuer.authorityId,
+                authorityName: credential.issuer.authorityName,
+                id: credential.issuer.id,
+                name: credential.issuer.name
+            },
+            proof: {
+                holder: credential.proof.holder,
+                nonce: credential.proof.nonce,
+                signature: credential.proof.signature,
+                type: credential.proof.type
+            },
+            provider: credential.provider,
+            type: credential.type,
+            verified: credential.verified,
+            version: credential.version
+        } as ICredential
+    } else {
+        console.log("reOrderCredential version lower than 1.0.0");
+        return {
+            credentialSubject: {
+                credential: {
+                    type: credential.credentialSubject.credential.type,
+                    value: credential.credentialSubject.credential.value
+                }
+            },
+            expirationDate: credential.expirationDate,
+            id: credential.id,
+            issuanceDate: credential.issuanceDate,
+            issuer: {
+                authorityId: credential.issuer.authorityId,
+                authorityName: credential.issuer.authorityName,
+                id: credential.issuer.id,
+                name: credential.issuer.name
+            },
+            proof: {
+                holder: credential.proof.holder,
+                nonce: credential.proof.nonce,
+                signature: credential.proof.signature,
+                type: credential.proof.type
+            },
+            provider: credential.provider,
+            type: credential.type,
+            version: credential.version
+        } as ICredential
+    }
 }
 
 export function reOrderCredentialProof(proof: IProof): IProof {
@@ -510,7 +543,7 @@ function requestedCredentialsCorrect(credentials: ICredentialObject, requestedCr
                     found = true;
                 }
             }
-            if (!found){ 
+            if (!found) {
                 checkResult.success = false;
                 checkResult.missingKeys.push(requestedCredential);
             }

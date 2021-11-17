@@ -108,54 +108,13 @@ export interface IWebRTCConfig {
     isHost: boolean;
 }
 
-export interface IProofObject {
-    credentialSubject: {
-        credential: {
-            description: string;
-            hash: string;
-            link: string;
-            template?: string;
-            type: string;
-        };
-    };
-    expirationDate: string;
-    id?: string;
-    issuanceDate?: number;
-    proof?: {
-        holder: string;
-        nonce: number;
-        signature?: string;
-        type: string;
-    };
-    txHash?: string;
-    type: string[];
-    version: string;
-}
 
-export interface IProof {
-    holder: string;
-    nonce: number;
-    type: string;
-    signature?: string;
-}
 
-export interface IRequestedCredentialKey {
-    key: string;
-    provider: string | string[];
-    name?: string;
-    required: boolean;
-    expectedValue?: string | boolean | number;
-}
 
-export interface IRequestedCredentials {
-    credentials: IRequestedCredentialKey[];
-    description?: string;
-    by?: string;
-    minimumRequired?: {
-        data: string[];
-        amount: number;
-    };
-}
+
+
+
+
 
 export interface IRequestedCredentialsCheckResult {
     success: boolean;
@@ -189,11 +148,7 @@ export interface IValidatedCredentials {
     requestedCheckResult?: IRequestedCredentialsCheckResult;
 }
 
-export interface ICredentialObject {
-    credentials: {
-        [provider: string]: ICredentialKeyObject;
-    };
-}
+
 
 export interface ICredential {
     credentialSubject: {
@@ -220,19 +175,9 @@ export interface ICredential {
     provider: string;
     type: string[];
     verifiedCredential?: boolean;
+    verified?: boolean;
     version: string;
 }
 
-export interface ICheckedDid {
-    holderKey: string;
-    did: string;
-    result: boolean;
-}
 
-export interface ICredentialKeyObject {
-    credentials: {
-        [key: string]: ICredential;
-    };
-    proof: IProof;
-}
 

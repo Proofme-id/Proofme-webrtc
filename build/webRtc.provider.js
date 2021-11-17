@@ -123,6 +123,7 @@ let WebRtcProvider = class WebRtcProvider {
     launchWebsocketClient(webRtcConfig) {
         return __awaiter(this, void 0, void 0, function* () {
             this.webRtcConfig = webRtcConfig;
+            // const W3CWebSocket = require("websocket").w3cwebsocket;
             let connectionSuccess = null;
             this.receivedActions$ = new rxjs_1.BehaviorSubject(null);
             if (this.connectionTimeout) {
