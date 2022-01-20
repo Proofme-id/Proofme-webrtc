@@ -2,7 +2,7 @@
 import { IRTCConnectionConfig } from "./interfaces/rtcConnectionConfig.interface";
 import * as http from "http";
 export declare class SignalingServer {
-    wss: any;
+    wsServer: any;
     rtcConnectionConfig: IRTCConnectionConfig;
     /**
      * Web RTC connection config

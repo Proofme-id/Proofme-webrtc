@@ -2,14 +2,16 @@
 // Dependencies for this module:
 //   ../http
 //   ../rxjs
+//   ../websocket
 //   ../web3
 
 import * as http from "http";
 import { BehaviorSubject } from "rxjs";
+import { w3cwebsocket } from "websocket";
 import Web3 from "web3";
 
 export class SignalingServer {
-        wss: any;
+        wsServer: any;
         rtcConnectionConfig: IRTCConnectionConfig;
         /**
             * Web RTC connection config
@@ -32,7 +34,7 @@ export class WebRtcProvider {
         hostUuid: string;
         peerConnection: RTCPeerConnection;
         dataChannel: RTCDataChannel;
-        wsClient: WebSocket;
+        wsClient: w3cwebsocket;
         receivedActions$: BehaviorSubject<any>;
         uuid$: BehaviorSubject<any>;
         websocketConnectionClosed$: BehaviorSubject<any>;
@@ -40,6 +42,10 @@ export class WebRtcProvider {
         websocketConnectionError$: BehaviorSubject<any>;
         webRtcConnectionConfig: RTCConfiguration;
         connectionTimeout: NodeJS.Timeout;
+        pongCheckInterval: NodeJS.Timeout;
+        pingTimeout: NodeJS.Timeout;
+        WEBSOCKET_PING_ANSWER_DELAY: number;
+        WEBSOCKET_PING_PONG_ALLOWED_TIME: number;
         /**
             * Returns the WebRTC configuration
             */
@@ -73,11 +79,12 @@ export class WebRtcProvider {
             * @param peerConnection The peer connection to set the local description
             * @param wsClient The websocket to send the offer to
             */
-        sendOffer(peerConnection: RTCPeerConnection, wsClient: WebSocket): Promise<void>;
+        sendOffer(peerConnection: RTCPeerConnection, wsClient: w3cwebsocket): Promise<void>;
         /**
             * This method will launch the websocket and listen to events
             */
         launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void>;
+        sendPing(): void;
         /**
             * This method will setup the peerconnection and datachannel
             * It will also emit received actions over an observable

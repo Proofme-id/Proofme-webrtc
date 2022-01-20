@@ -31,6 +31,11 @@ let WebRtcProvider = class WebRtcProvider {
         this.websocketConnectionOpen$ = new rxjs_1.BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
         this.websocketConnectionError$ = new rxjs_1.BehaviorSubject(null); // Whenever there is an error event on the websocket, this observable will emit
         this.connectionTimeout = null;
+        this.pongCheckInterval = null;
+        this.pingTimeout = null;
+        this.WEBSOCKET_PING_ANSWER_DELAY = 1000;
+        // The allowed time before a ping pong is missing and thus disconnecting the connection
+        this.WEBSOCKET_PING_PONG_ALLOWED_TIME = 3000;
     }
     /**
      * Returns the WebRTC configuration
@@ -81,10 +86,13 @@ let WebRtcProvider = class WebRtcProvider {
         if (this.wsClient) {
             console.log("Websocket closed");
             this.wsClient.close();
+            this.wsClient.onclose = null;
         }
         this.peerConnection = null;
         this.dataChannel = null;
         this.wsClient = null;
+        this.websocketConnectionClosed$.next(true);
+        this.websocketConnectionOpen$.next(false);
     }
     /**
      * Disconnect on this application and send a disconnect event over the datachannel
@@ -123,7 +131,6 @@ let WebRtcProvider = class WebRtcProvider {
     launchWebsocketClient(webRtcConfig) {
         return __awaiter(this, void 0, void 0, function* () {
             this.webRtcConfig = webRtcConfig;
-            // const W3CWebSocket = require("websocket").w3cwebsocket;
             let connectionSuccess = null;
             this.receivedActions$ = new rxjs_1.BehaviorSubject(null);
             if (this.connectionTimeout) {
@@ -181,6 +188,14 @@ let WebRtcProvider = class WebRtcProvider {
                         case "error":
                             // On an error
                             console.log("Websocket onmessage error: ", message);
+                            if (message == "Command not found: ping") {
+                                clearTimeout(this.pongCheckInterval);
+                                this.pongCheckInterval = setTimeout(() => {
+                                    console.log(`Ping pong took more than ${this.WEBSOCKET_PING_PONG_ALLOWED_TIME}ms. Disconnecting`);
+                                    this.disconnect();
+                                }, this.WEBSOCKET_PING_PONG_ALLOWED_TIME);
+                                this.sendPing();
+                            }
                             break;
                         case "connect":
                             console.log("Websocket connect success:", success);
@@ -230,7 +245,10 @@ let WebRtcProvider = class WebRtcProvider {
                             }
                             break;
                         case "connected":
-                            console.log("webRtcConnectionConfig:", webRtcConnectionConfig);
+                            console.log("Connected with webRtcConnectionConfig:", webRtcConnectionConfig);
+                            // We successfully connected so no need to check on the ping pong anymore
+                            clearTimeout(this.pongCheckInterval);
+                            clearTimeout(this.pingTimeout);
                             if (webRtcConnectionConfig) {
                                 this.webRtcConnectionConfig = webRtcConnectionConfig;
                                 if (!this.webRtcConfig.isHost) {
@@ -242,6 +260,15 @@ let WebRtcProvider = class WebRtcProvider {
                                 console.log("Websocket onmessage connected success with client uuid:", uuid);
                                 yield this.sendOffer(this.peerConnection, this.wsClient);
                             }
+                            break;
+                        case "pong":
+                            // console.log("client received pong");
+                            clearTimeout(this.pongCheckInterval);
+                            this.pongCheckInterval = setTimeout(() => {
+                                console.log(`Ping pong took more than ${this.WEBSOCKET_PING_PONG_ALLOWED_TIME}ms. Disconnecting`);
+                                this.disconnect();
+                            }, this.WEBSOCKET_PING_PONG_ALLOWED_TIME);
+                            this.sendPing();
                             break;
                         case "offer":
                             // If the application is not the host, it receives an offer whenever a client connects.
@@ -262,12 +289,13 @@ let WebRtcProvider = class WebRtcProvider {
                             console.log("Received host");
                             // Whenever the host receives a host request back, set the UUID provided
                             if (uuid && this.webRtcConfig.isHost) {
-                                console.log("Websocket onmessage host waiting for user to connect to " + uuid);
+                                console.log("Acting as host, waiting for someone to connect to uuid " + uuid);
                                 this.setUuid(uuid);
                                 if (webRtcConnectionConfig) {
                                     this.webRtcConnectionConfig = webRtcConnectionConfig;
                                 }
                                 yield this.setupPeerconnection(uuid);
+                                this.sendPing();
                             }
                             break;
                         case "leave":
@@ -302,6 +330,21 @@ let WebRtcProvider = class WebRtcProvider {
             }));
         });
     }
+    sendPing() {
+        // console.log("about to send ping to server");
+        this.pingTimeout = setTimeout(() => {
+            // Ready state 1 = open
+            if (this.wsClient.readyState === 1) {
+                // console.log("actually sending ping to server");
+                this.wsClient.send(JSON.stringify({
+                    type: "ping"
+                }));
+            }
+            else {
+                console.log("Websocket closed in the meantime... Not sending ping");
+            }
+        }, this.WEBSOCKET_PING_ANSWER_DELAY);
+    }
     /**
      * This method will setup the peerconnection and datachannel
      * It will also emit received actions over an observable
@@ -333,7 +376,7 @@ let WebRtcProvider = class WebRtcProvider {
                         data = {};
                     }
                 }));
-                event.channel.onopen = (eventMessage) => {
+                event.channel.onopen = () => {
                     console.log("Sending p2p connected!");
                     this.receivedActions$.next({ action: "p2pConnected", p2pConnected: true });
                     console.log("p2p connected so close the websocket connection");

@@ -1,12 +1,13 @@
 /// <reference types="node" />
 import { BehaviorSubject } from "rxjs";
 import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
+import { w3cwebsocket } from "websocket";
 export declare class WebRtcProvider {
     webRtcConfig: IWebRTCConfig;
     hostUuid: string;
     peerConnection: RTCPeerConnection;
     dataChannel: RTCDataChannel;
-    wsClient: WebSocket;
+    wsClient: w3cwebsocket;
     receivedActions$: BehaviorSubject<any>;
     uuid$: BehaviorSubject<any>;
     websocketConnectionClosed$: BehaviorSubject<any>;
@@ -14,6 +15,10 @@ export declare class WebRtcProvider {
     websocketConnectionError$: BehaviorSubject<any>;
     webRtcConnectionConfig: RTCConfiguration;
     connectionTimeout: NodeJS.Timeout;
+    pongCheckInterval: NodeJS.Timeout;
+    pingTimeout: NodeJS.Timeout;
+    WEBSOCKET_PING_ANSWER_DELAY: number;
+    WEBSOCKET_PING_PONG_ALLOWED_TIME: number;
     /**
      * Returns the WebRTC configuration
      */
@@ -47,11 +52,12 @@ export declare class WebRtcProvider {
      * @param peerConnection The peer connection to set the local description
      * @param wsClient The websocket to send the offer to
      */
-    sendOffer(peerConnection: RTCPeerConnection, wsClient: WebSocket): Promise<void>;
+    sendOffer(peerConnection: RTCPeerConnection, wsClient: w3cwebsocket): Promise<void>;
     /**
      * This method will launch the websocket and listen to events
      */
     launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void>;
+    sendPing(): void;
     /**
      * This method will setup the peerconnection and datachannel
      * It will also emit received actions over an observable

@@ -50,20 +50,16 @@ class SignalingServer {
      */
     startSignal(server) {
         console.log("Starting Signaling server.");
-        this.wss = new WebSocket.Server({ server });
+        this.wsServer = new WebSocket.Server({ server });
         const sendTo = (datachannel, message) => {
             datachannel.send(JSON.stringify(message));
         };
-        this.wss.on("connection", (ws) => {
-            ws.isAlive = true; // Keep things alive
+        this.wsServer.on("connection", (ws) => {
             ws.uuid = uuid_1.v4(); // Unique identifier for the client
             ws.did = null; // When authenticated: publicKey or didAddress
             ws.host = false; // Is a host, true or false
             ws.authenticated = false; // true or false
             ws.connected = null; // null or client.uuid connected to
-            ws.on("pong", () => {
-                ws.isAlive = true;
-            });
             ws.on("error", (err) => {
                 // ECONNRESET can get thrown when the client disconnects. This application
                 // will crash. Ignore this error.
@@ -111,9 +107,16 @@ class SignalingServer {
                             webRtcConnectionConfig: this.getRTCConnectionConfig("host")
                         });
                         break;
+                    case "ping":
+                        // Setup a channel (Host)
+                        // console.log("Host received ping, sending pong");
+                        sendTo(ws, {
+                            type: "pong"
+                        });
+                        break;
                     case "connect": {
                         // Connect to a channel (Host)
-                        const hosts = [...this.wss.clients].filter((client) => {
+                        const hosts = [...this.wsServer.clients].filter((client) => {
                             return client.uuid === host && client.connected === null && client.host === true;
                         });
                         if (hosts.length === 1) {
@@ -147,8 +150,8 @@ class SignalingServer {
                     }
                     case "offer":
                         // if Client exists then send him offer details
-                        if (ws.connected != null && this.wss.clients.size > 0) {
-                            const hostsOffer = [...this.wss.clients].filter((client) => {
+                        if (ws.connected != null && this.wsServer.clients.size > 0) {
+                            const hostsOffer = [...this.wsServer.clients].filter((client) => {
                                 return client.connected === ws.uuid;
                             });
                             if (hostsOffer.length === 1) {
@@ -184,7 +187,7 @@ class SignalingServer {
                     case "answer":
                         // if Client response to an offer with an answer
                         if (ws.connected != null) {
-                            const hostsOffer = [...this.wss.clients].filter((client) => {
+                            const hostsOffer = [...this.wsServer.clients].filter((client) => {
                                 return client.connected === ws.uuid;
                             });
                             if (hostsOffer.length === 1) {
@@ -220,7 +223,7 @@ class SignalingServer {
                     case "candidate":
                         // if Client response to an offer with an answer
                         if (ws.connected != null) {
-                            const hostsOffer = [...this.wss.clients].filter((client) => {
+                            const hostsOffer = [...this.wsServer.clients].filter((client) => {
                                 return client.connected === ws.uuid;
                             });
                             if (hostsOffer.length === 1) {
@@ -250,7 +253,7 @@ class SignalingServer {
                         break;
                     case "leave":
                         if (ws.connected != null) {
-                            const clients = [...this.wss.clients].filter((client) => {
+                            const clients = [...this.wsServer.clients].filter((client) => {
                                 return client.connected === ws.uuid;
                             });
                             ws.uuid = uuid_1.v4();
@@ -298,7 +301,7 @@ class SignalingServer {
             });
             ws.on("close", (wsArg, request, client) => {
                 if (wsArg.connected != null) {
-                    const clients = [...this.wss.clients].filter((clientArg) => {
+                    const clients = [...this.wsServer.clients].filter((clientArg) => {
                         return clientArg.connected === wsArg.uuid;
                     });
                     if (clients.length === 1) {
