@@ -10,7 +10,7 @@ export class WebRtcProvider {
     hostUuid: string; // The host UUID to connect to from the client
     peerConnection: RTCPeerConnection = null; // The peer connection between client and host
     dataChannel: RTCDataChannel = null; // The data channel between client and host
-    wsClient: WebSocket = null; // The websocket connection between client and signaling server or host and signaling server
+    wsClient: w3cwebsocket = null; // The websocket connection between client and signaling server or host and signaling server
     receivedActions$ = new BehaviorSubject(null); // Whenever an action is received, this observable will emit an event
     uuid$ = new BehaviorSubject(null); // Whenever the UUID is set, it will emit an event (so that the host can set it somewhere in like a QR)
     websocketConnectionClosed$ = new BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
@@ -30,7 +30,7 @@ export class WebRtcProvider {
      * The client needs to set the host UUID to connect to before setting up the websocket connection
      * @param hostUuid The UUID of the host
      */
-    setHostUuid(hostUuid: string) {
+    setHostUuid(hostUuid: string): void {
         this.hostUuid = hostUuid;
     }
 
@@ -39,7 +39,7 @@ export class WebRtcProvider {
      * @param action As a string, which action type do you want to send?
      * @param data The data to send as an object
      */
-    sendData(action: string, data: any) {
+    sendData(action: string, data: any): void {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
             this.dataChannel.send(JSON.stringify({ action, ...data }));
         } else {
@@ -51,14 +51,14 @@ export class WebRtcProvider {
      * Whenever the UUID is set from the host this observable emits
      * @param uuid The UUID to allow clients connec to
      */
-    setUuid(uuid: string) {
+    setUuid(uuid: string): void {
         this.uuid$.next(uuid);
     }
 
     /**
      * Only disconnect on this application and send no disconnect over the data channel
      */
-    disconnect() {
+    disconnect(): void {
         console.log("Disconnect");
         if (this.peerConnection) {
             console.log("Peerconnection closed");
@@ -80,7 +80,7 @@ export class WebRtcProvider {
     /**
      * Disconnect on this application and send a disconnect event over the datachannel
      */
-    remoteDisconnect() {
+    remoteDisconnect(): void {
         console.log("datachannel:", this.dataChannel);
         if (this.dataChannel && this.dataChannel.readyState === "open") {
             console.log("Data channel sending disconnect");
@@ -99,7 +99,7 @@ export class WebRtcProvider {
      * @param peerConnection The peer connection to set the local description
      * @param wsClient The websocket to send the offer to
      */
-    async sendOffer(peerConnection: RTCPeerConnection, wsClient: WebSocket) {
+    async sendOffer(peerConnection: RTCPeerConnection, wsClient: w3cwebsocket): Promise<void> {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         wsClient.send(JSON.stringify({
@@ -111,10 +111,8 @@ export class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    async launchWebsocketClient(webRtcConfig: IWebRTCConfig) {
+    async launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void> {
         this.webRtcConfig = webRtcConfig;
-
-        // const W3CWebSocket = require("websocket").w3cwebsocket;
 
         let connectionSuccess = null;
         this.receivedActions$ = new BehaviorSubject(null);
@@ -164,7 +162,7 @@ export class WebRtcProvider {
                 let data: any;
                 // accepting only JSON messages
                 try {
-                    data = JSON.parse(msg.data);
+                    data = JSON.parse(msg.data as string);
                 } catch (e) {
                     console.log("Websocket onmessage ERROR: Invalid JSON");
                     data = {};
@@ -299,7 +297,7 @@ export class WebRtcProvider {
      * It will also emit received actions over an observable
      * @param uuid The UUID to connect to
      */
-    async setupPeerconnection(uuid: string) {
+    async setupPeerconnection(uuid: string): Promise<void> {
         console.log("setupPeerconnection with uuid:", uuid);
         console.log("this.webRtcConnectionConfig:", this.webRtcConnectionConfig);
         this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
@@ -325,7 +323,7 @@ export class WebRtcProvider {
                     data = {};
                 }
             });
-            event.channel.onopen = (eventMessage: any) => {
+            event.channel.onopen = () => {
                 console.log("Sending p2p connected!");
                 this.receivedActions$.next({ action: "p2pConnected", p2pConnected: true });
                 console.log("p2p connected so close the websocket connection");

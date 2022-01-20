@@ -5,7 +5,11 @@ export { IRTCConnectionConfig } from "./interfaces/rtcConnectionConfig.interface
 export { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 export { IProofObject } from "./interfaces/proof-object.interface";
 export { IProof } from "./interfaces/proof.interface";
+export { ICheckedDid } from "./interfaces/checkedDid.interface";
 export { IRequestedCredentialKey } from "./interfaces/requestedCredentialKey.interface";
+export { IValidatedCredentials } from "./interfaces/validatedCredentials.interface";
+export { ICredentialObject } from "./interfaces/credentialsObject.interface";
+export { ICredentialKeyObject } from "./interfaces/credentialKeyObject.interface";
 export { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
 export { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 export { calculateMinutesDifference } from "./functions/functions";

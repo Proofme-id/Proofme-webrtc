@@ -8,7 +8,6 @@ import { IRequestedCredentials } from "../interfaces/requestedCredentials.interf
 import { IRequestedCredentialsCheckResult } from "../interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "../interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "../smartcontracts/claimHolderAbi";
-import semver from "semver";
 
 export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
     const web3 = new Web3(web3Url);
@@ -372,64 +371,37 @@ function reOrderCredentialObject(credentialObject: ICredentialObject): ICredenti
 }
 
 function reOrderCredential(credential: ICredential): ICredential {
-    if (semver.gt(credential.version, "1.0.0")) {
-        console.log("reOrderCredential version higher than 1.0.0");
-        return {
-            credentialSubject: {
-                credential: {
-                    type: credential.credentialSubject.credential.type,
-                    value: credential.credentialSubject.credential.value
-                }
-            },
-            expirationDate: credential.expirationDate,
-            id: credential.id,
-            issuanceDate: credential.issuanceDate,
-            issuer: {
-                authorityId: credential.issuer.authorityId,
-                authorityName: credential.issuer.authorityName,
-                id: credential.issuer.id,
-                name: credential.issuer.name
-            },
-            proof: {
-                holder: credential.proof.holder,
-                nonce: credential.proof.nonce,
-                signature: credential.proof.signature,
-                type: credential.proof.type
-            },
-            provider: credential.provider,
-            type: credential.type,
-            verified: credential.verified,
-            version: credential.version
-        } as ICredential
-    } else {
-        console.log("reOrderCredential version lower than 1.0.0");
-        return {
-            credentialSubject: {
-                credential: {
-                    type: credential.credentialSubject.credential.type,
-                    value: credential.credentialSubject.credential.value
-                }
-            },
-            expirationDate: credential.expirationDate,
-            id: credential.id,
-            issuanceDate: credential.issuanceDate,
-            issuer: {
-                authorityId: credential.issuer.authorityId,
-                authorityName: credential.issuer.authorityName,
-                id: credential.issuer.id,
-                name: credential.issuer.name
-            },
-            proof: {
-                holder: credential.proof.holder,
-                nonce: credential.proof.nonce,
-                signature: credential.proof.signature,
-                type: credential.proof.type
-            },
-            provider: credential.provider,
-            type: credential.type,
-            version: credential.version
-        } as ICredential
+    return sortObjectAlphabetically(credential);
+}
+
+export function sortObjectAlphabetically(object: any): any {
+    const sortedObj = {};
+    const keys = Object.keys(object);
+
+    keys.sort((key1, key2) => {
+        key1 = key1.toLowerCase();
+        key2 = key2.toLowerCase();
+        if (key1 < key2) {
+            return -1;
+        }
+        if (key1 > key2) {
+            return 1;
+        }
+        // If it's the same
+        return 0;
+    });
+
+    for (const index in keys) {
+        const key = keys[index];
+        // If we have nested objects, we need to dig deeper
+        if (typeof object[key] == "object" && !(object[key] instanceof Array)) {
+            sortedObj[key] = sortObjectAlphabetically(object[key]);
+        } else {
+            sortedObj[key] = object[key];
+        }
     }
+
+    return sortedObj;
 }
 
 export function reOrderCredentialProof(proof: IProof): IProof {
@@ -493,28 +465,7 @@ export function signProofObject(proofObject: IProofObject, privateKey: string) {
 }
 
 export function reOrderProofObject(proofObject: IProofObject): IProofObject {
-    return {
-        credentialSubject: {
-            credential: {
-                description: proofObject.credentialSubject.credential.description,
-                hash: proofObject.credentialSubject.credential.hash,
-                link: proofObject.credentialSubject.credential.link,
-                template: proofObject.credentialSubject.credential.template,
-                type: proofObject.credentialSubject.credential.description
-            }
-        },
-        expirationDate: proofObject.expirationDate,
-        id: proofObject.id,
-        issuanceDate: proofObject.issuanceDate,
-        proof: {
-            holder: proofObject.proof.holder,
-            nonce: proofObject.proof.nonce,
-            signature: proofObject.proof.signature,
-            type: proofObject.proof.type
-        },
-        type: proofObject.type,
-        version: proofObject.version
-    } as IProofObject
+    return sortObjectAlphabetically(proofObject);
 }
 
 function requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult {

@@ -140,12 +140,40 @@ export interface IProof {
     signature?: string;
 }
 
+export interface ICheckedDid {
+    holderKey: string;
+    did: string;
+    result: boolean;
+}
+
 export interface IRequestedCredentialKey {
     key: string;
     provider: string | string[];
     name?: string;
     required: boolean;
     expectedValue?: string | boolean | number;
+}
+
+export interface IValidatedCredentials {
+    code: number;
+    credentials?: ICredentialObject;
+    invalidCredentials?: ICredential[];
+    message: string;
+    valid: boolean;
+    requestedCheckResult?: IRequestedCredentialsCheckResult;
+}
+
+export interface ICredentialObject {
+    credentials: {
+        [provider: string]: ICredentialKeyObject;
+    };
+}
+
+export interface ICredentialKeyObject {
+    credentials: {
+        [key: string]: ICredential;
+    };
+    proof: IProof;
 }
 
 export interface IRequestedCredentials {
@@ -174,27 +202,13 @@ export function knownAddressesContains(list: any[], sha3Key: string, didContract
 export function getSha3Key(key: string, web3Node: any): any;
 export function getKeyPurpose(keyManagerContract: any, key: string): Promise<string>;
 export function calculateMinutesDifference(dt2: Date, dt1: Date): number;
+export function sortObjectAlphabetically(object: any): any;
 export function reOrderCredentialProof(proof: IProof): IProof;
 export function signCredential(credential: ICredential, privateKey: string): string;
 export function signCredentialObject(credentialObject: ICredentialObject, privateKey: string): string;
 export function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
 export function signProofObject(proofObject: IProofObject, privateKey: string): string;
 export function reOrderProofObject(proofObject: IProofObject): IProofObject;
-
-export interface IValidatedCredentials {
-    code: number;
-    credentials?: ICredentialObject;
-    invalidCredentials?: ICredential[];
-    message: string;
-    valid: boolean;
-    requestedCheckResult?: IRequestedCredentialsCheckResult;
-}
-
-export interface ICredentialObject {
-    credentials: {
-        [provider: string]: ICredentialKeyObject;
-    };
-}
 
 export interface ICredential {
     credentialSubject: {
@@ -223,18 +237,5 @@ export interface ICredential {
     verifiedCredential?: boolean;
     verified?: boolean;
     version: string;
-}
-
-export interface ICheckedDid {
-    holderKey: string;
-    did: string;
-    result: boolean;
-}
-
-export interface ICredentialKeyObject {
-    credentials: {
-        [key: string]: ICredential;
-    };
-    proof: IProof;
 }
 
