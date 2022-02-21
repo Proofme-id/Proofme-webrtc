@@ -1,45 +1,43 @@
 {
-  "name": "@proofmeid/webrtc",
-  "version": "0.0.0",
-  "description": "WebRTC + Signaling Server",
-  "author": "Proofme.ID",
-  "license": "ISC",
-  "main": "proofmeid-webrtc.js",
-  "scripts": {
-    "build:watch": "npm run tsc-worker && webpack --env.WATCH=true",
-    "build:prod": "npm run tsc-worker-prod && webpack --env.MODE=production && cp package.json ./dist/package.json",
-    "publish-package": "npm run build:prod && cd ./dist/node && npm publish  && cd ../web && npm publish",
-    "tsc-worker": "tsc --p tsconfig.worker.json",
-    "tsc-worker-prod": "tsc --p tsconfig.worker.prod.json",
-    "watch": "tsc -w",
-    "lint": "eslint . --ext .ts",
-    "lint:json": "eslint . --ext .ts -f json -o eslint-results.json",
-    "lint:fix": "eslint . --fix --ext .ts"
-  },
-  "dependencies": {
-    "@angular/core": "10.2.1",
-    "@types/uuid": "^8.3.0",
-    "bignumber.js": "^9.0.1",
-    "rxjs": "6.6.3",
-    "semver": "^7.3.5",
-    "uuid": "^8.3.2",
-    "web3": "1.2.5",
-    "websocket": "^1.0.32",
-    "wrtc": "^0.4.6"
-  },
-  "devDependencies": {
-    "@types/semver": "^7.3.9",
-    "@types/websocket": "^1.0.4",
-    "@types/ws": "^7.2.8",
-    "@typescript-eslint/eslint-plugin": "^4.23.0",
-    "@typescript-eslint/parser": "^4.23.0",
-    "dts-bundle": "^0.7.3",
-    "eslint": "^7.13.0",
-    "eslint-plugin-no-loops": "^0.3.0",
-    "fs-extra": "^7.0.0",
-    "ts-loader": "^5.2.1",
-    "typescript": "4.0.5",
-    "webpack": "^4.20.2",
-    "webpack-cli": "^3.1.1"
-  }
+    "name": "@proofmeid/webrtc",
+    "version": "0.0.0",
+    "description": "WebRTC + Signaling Server",
+    "author": "Proofme.ID",
+    "license": "ISC",
+    "main": "proofmeid-webrtc.js",
+    "scripts": {
+        "build:watch": "npm run tsc-worker && webpack --env.WATCH=true",
+        "build:prod": "npm run tsc-worker-prod && webpack --mode=production && cp package.json ./dist/package.json",
+        "publish-package": "npm run build:prod && cd ./dist/node && npm publish  && cd ../web && npm publish",
+        "tsc-worker": "tsc --p tsconfig.worker.json",
+        "tsc-worker-prod": "tsc --p tsconfig.worker.prod.json",
+        "watch": "tsc -w",
+        "lint": "eslint . --ext .ts",
+        "lint:json": "eslint . --ext .ts -f json -o eslint-results.json",
+        "lint:fix": "eslint . --fix --ext .ts"
+    },
+    "dependencies": {
+        "@angular/core": "13.2.2",
+        "bignumber.js": "9.0.2",
+        "rxjs": "7.5.4.",
+        "uuid": "8.3.2",
+        "web3": "1.7.0",
+        "websocket": "1.0.34",
+        "wrtc": "0.4.7"
+    },
+    "devDependencies": {
+        "@types/uuid": "8.3.4",
+        "@types/websocket": "1.0.5",
+        "@types/ws": "8.2.3",
+        "@typescript-eslint/eslint-plugin": "5.12.0",
+        "@typescript-eslint/parser": "5.12.0",
+        "dts-bundle": "0.7.3",
+        "eslint": "8.9.0",
+        "eslint-plugin-no-loops": "0.3.0",
+        "fs-extra": "10.0.0",
+        "ts-loader": "9.2.6",
+        "typescript": "4.5.5",
+        "webpack": "5.69.1",
+        "webpack-cli": "4.9.2"
+    }
 }

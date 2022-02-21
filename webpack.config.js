@@ -21,7 +21,8 @@ module.exports = (env) => {
 
     // Define shared resolve definition
     let resolve = {
-        extensions: [".tsx", ".ts", ".js"]
+        extensions: [".tsx", ".ts", ".js"],
+        fallback: { crypto: false }
     };
 
     // Make sure all node_modules are marked as external
@@ -72,9 +73,9 @@ module.exports = (env) => {
             module: module,
             resolve: resolve,
             mode: mode,
-            node: {
-                fs: "empty"
-            },
+            // node: {
+            //     fs: "empty"
+            // },
             stats: "errors-only",
             devtool: mode == "development" ? "inline-source-map" : "source-map",
             plugins: [

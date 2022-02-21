@@ -1,23 +1,27 @@
 {
     "compilerOptions": {
-      "allowSyntheticDefaultImports": true,
-      "declaration": false,
-      "emitDecoratorMetadata": true,
-      "experimentalDecorators": true,
-      "lib": [
-        "dom",
-        "es2015"
-      ],
-      "module": "commonjs",
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "target": "es6",
-      "outDir": "build"
+        "allowSyntheticDefaultImports": true,
+        "declaration": false,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "target": "es6",
+        "outDir": "build",
+        "paths": {
+            "crypto": [
+                "./node_modules/crypto-browserify"
+            ]
+        }
     },
     "exclude": [
-      "node_modules",
-      "src/**/*.spec.ts"
+        "node_modules",
+        "src/**/*.spec.ts"
     ],
     "compileOnSave": false
-  }
-  
+}

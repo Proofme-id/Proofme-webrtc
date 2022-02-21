@@ -1,27 +1,27 @@
 {
     "compilerOptions": {
-      "allowSyntheticDefaultImports": true,
-      "esModuleInterop": true,
-      "declaration": true,
-      "emitDecoratorMetadata": true,
-      "experimentalDecorators": true,
-      "lib": [
-        "dom",
-        "es2015"
-      ],
-      "module": "commonjs",
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "target": "esnext",
-      "outDir": "build"
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "declaration": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "target": "esnext",
+        "outDir": "build"
     },
     "include": [
-      "src/**/*.ts", "index.ts"
+        "src/**/*.ts",
+        "index.ts"
     ],
     "exclude": [
-      "node_modules",
-      "src/**/*.spec.ts"
+        "node_modules",
+        "src/**/*.spec.ts"
     ],
     "compileOnSave": false
-  }
-  
+}

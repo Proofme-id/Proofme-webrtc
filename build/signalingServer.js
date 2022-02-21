@@ -55,7 +55,7 @@ class SignalingServer {
             datachannel.send(JSON.stringify(message));
         };
         this.wsServer.on("connection", (ws) => {
-            ws.uuid = uuid_1.v4(); // Unique identifier for the client
+            ws.uuid = (0, uuid_1.v4)(); // Unique identifier for the client
             ws.did = null; // When authenticated: publicKey or didAddress
             ws.host = false; // Is a host, true or false
             ws.authenticated = false; // true or false
@@ -256,7 +256,7 @@ class SignalingServer {
                             const clients = [...this.wsServer.clients].filter((client) => {
                                 return client.connected === ws.uuid;
                             });
-                            ws.uuid = uuid_1.v4();
+                            ws.uuid = (0, uuid_1.v4)();
                             if (clients.length === 1) {
                                 sendTo(clients[0], {
                                     type: "leave",
@@ -282,7 +282,7 @@ class SignalingServer {
                             ws.connected = null;
                         }
                         else {
-                            ws.uuid = uuid_1.v4();
+                            ws.uuid = (0, uuid_1.v4)();
                             sendTo(ws, {
                                 type: "leave",
                                 success: false,

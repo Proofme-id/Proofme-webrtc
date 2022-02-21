@@ -411,7 +411,7 @@ let WebRtcProvider = class WebRtcProvider {
     }
 };
 WebRtcProvider = __decorate([
-    core_1.Injectable()
+    (0, core_1.Injectable)()
 ], WebRtcProvider);
 exports.WebRtcProvider = WebRtcProvider;
 //# sourceMappingURL=webRtc.provider.js.map
