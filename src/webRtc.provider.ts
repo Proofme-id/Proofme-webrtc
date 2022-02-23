@@ -12,10 +12,10 @@ export class WebRtcProvider {
     dataChannel: RTCDataChannel = null; // The data channel between client and host
     wsClient: w3cwebsocket = null; // The websocket connection between client and signaling server or host and signaling server
     receivedActions$ = new BehaviorSubject(null); // Whenever an action is received, this observable will emit an event
-    uuid$ = new BehaviorSubject(null); // Whenever the UUID is set, it will emit an event (so that the host can set it somewhere in like a QR)
-    websocketConnectionClosed$ = new BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
-    websocketConnectionOpen$ = new BehaviorSubject(null); // Whenever there is an event on the websocket, this observable will emit
-    websocketConnectionError$ = new BehaviorSubject(null); // Whenever there is an error event on the websocket, this observable will emit
+    uuid$ = new BehaviorSubject<string>(null); // Whenever the UUID is set, it will emit an event (so that the host can set it somewhere in like a QR)
+    websocketConnectionClosed$ = new BehaviorSubject<boolean>(null); // Whenever there is an event on the websocket, this observable will emit
+    websocketConnectionOpen$ = new BehaviorSubject<boolean>(null); // Whenever there is an event on the websocket, this observable will emit
+    websocketConnectionError$ = new BehaviorSubject<boolean>(null); // Whenever there is an error event on the websocket, this observable will emit
     webRtcConnectionConfig: RTCConfiguration;
     connectionTimeout: NodeJS.Timeout = null;
     pongCheckInterval: NodeJS.Timeout = null;

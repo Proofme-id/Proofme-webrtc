@@ -10,12 +10,12 @@ import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredenti
 @Injectable()
 export class ProofmeUtilsProvider {
 
-	async validCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials>  {
-        return validCredentialsFunc(credentialObject, web3Url, checkUserNonce);
+	async validCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>  {
+        return validCredentialsFunc(credentialObject, web3Url, checkUserNonce, livenessCheckRequired);
     }
 
-	async validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>  {
-        return validCredentialsTrustedPartiesFunc(credentialObject, web3Url, requestedCredentials, trustedDids, checkUserNonce);
+	async validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>  {
+        return validCredentialsTrustedPartiesFunc(credentialObject, web3Url, requestedCredentials, trustedDids, checkUserNonce, livenessCheckRequired);
     }
 
     signCredential(credential: ICredential, privateKey: string): string  {

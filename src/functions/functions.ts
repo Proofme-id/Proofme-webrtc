@@ -9,14 +9,21 @@ import { IRequestedCredentialsCheckResult } from "../interfaces/requestedCredent
 import { IValidatedCredentials } from "../interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "../smartcontracts/claimHolderAbi";
 
-export async function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
+export async function validCredentialsTrustedPartiesFunc(
+    credentialObject: ICredentialObject,
+    web3Url: string,
+    requestedCredentials: IRequestedCredentials,
+    trustedDids: string[],
+    checkUserNonce: boolean,
+    livenessCheckRequired?: boolean
+): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
     const web3 = new Web3(web3Url);
     const requestedCheckResult = requestedCredentialsCorrect(credentialObject, requestedCredentials);
     if (!requestedCheckResult.success) {
         requestedCheckResult.credentials = credentialObject;
         return requestedCheckResult;
     }
-    const result = await validCredentialsFunc(credentialObject, web3Url, checkUserNonce);
+    const result = await validCredentialsFunc(credentialObject, web3Url, checkUserNonce, livenessCheckRequired);
     // If the "normal" check was not valid, don't check the trusted parties but return the result
     if (!result.valid) {
         return result;
@@ -125,7 +132,7 @@ export async function validCredentialsTrustedPartiesFunc(credentialObject: ICred
 
 }
 
-export async function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials> {
+export async function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials> {
     // If the object is stringified
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
@@ -194,7 +201,15 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
                         const userDidContractAddress = credential.id.split(":")[2];
                         const userCorrectDid = await didContractKeyWrong(web3Node, web3Url, claimHolderAbi, userHolderKey, userDidContractAddress, checkedDid);
                         if (userCorrectDid) {
-                            validCredentialsAmount++;
+                            if (!livenessCheckRequired || (credential.verified === undefined || credential.verified === true)) {
+                                validCredentialsAmount++;
+                            } else {
+                                invalidCredentials.push({
+                                    credential,
+                                    code: 15,
+                                    message: "Liveness check required but credential not verified"
+                                });
+                            }
                         } else {
                             invalidCredentials.push({
                                 credential,

@@ -36,10 +36,10 @@ export class WebRtcProvider {
         dataChannel: RTCDataChannel;
         wsClient: w3cwebsocket;
         receivedActions$: BehaviorSubject<any>;
-        uuid$: BehaviorSubject<any>;
-        websocketConnectionClosed$: BehaviorSubject<any>;
-        websocketConnectionOpen$: BehaviorSubject<any>;
-        websocketConnectionError$: BehaviorSubject<any>;
+        uuid$: BehaviorSubject<string>;
+        websocketConnectionClosed$: BehaviorSubject<boolean>;
+        websocketConnectionOpen$: BehaviorSubject<boolean>;
+        websocketConnectionError$: BehaviorSubject<boolean>;
         webRtcConnectionConfig: RTCConfiguration;
         connectionTimeout: NodeJS.Timeout;
         pongCheckInterval: NodeJS.Timeout;
@@ -94,8 +94,8 @@ export class WebRtcProvider {
 }
 
 export class ProofmeUtilsProvider {
-    validCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials>;
-    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
+    validCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
+    validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
     signCredential(credential: ICredential, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
     signProofObject(proofObject: IProofObject, privateKey: string): string;
@@ -200,8 +200,8 @@ export interface IRequestedCredentialsCheckResult {
     credentials?: ICredentialObject;
 }
 
-export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
-export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean): Promise<IValidatedCredentials>;
+export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
+export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
 export function userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
 export function issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
 export function didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;

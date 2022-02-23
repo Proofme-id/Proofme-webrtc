@@ -1,6 +1,6 @@
 {
     "name": "@proofmeid/webrtc-web",
-    "version": "0.0.85",
+    "version": "0.0.90",
     "description": "WebRTC + Signaling Server",
     "author": "Proofme.ID",
     "license": "ISC",
@@ -15,7 +15,7 @@
     "dependencies": {
         "@angular/core": "13.2.2",
         "bignumber.js": "9.0.2",
-        "rxjs": "7.5.4.",
+        "rxjs": "7.5.4",
         "uuid": "8.3.2",
         "web3": "1.7.0",
         "websocket": "1.0.34",

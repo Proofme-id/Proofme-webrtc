@@ -9,10 +9,10 @@ export declare class WebRtcProvider {
     dataChannel: RTCDataChannel;
     wsClient: w3cwebsocket;
     receivedActions$: BehaviorSubject<any>;
-    uuid$: BehaviorSubject<any>;
-    websocketConnectionClosed$: BehaviorSubject<any>;
-    websocketConnectionOpen$: BehaviorSubject<any>;
-    websocketConnectionError$: BehaviorSubject<any>;
+    uuid$: BehaviorSubject<string>;
+    websocketConnectionClosed$: BehaviorSubject<boolean>;
+    websocketConnectionOpen$: BehaviorSubject<boolean>;
+    websocketConnectionError$: BehaviorSubject<boolean>;
     webRtcConnectionConfig: RTCConfiguration;
     connectionTimeout: NodeJS.Timeout;
     pongCheckInterval: NodeJS.Timeout;
