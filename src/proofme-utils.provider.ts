@@ -27,7 +27,6 @@ export class ProofmeUtilsProvider {
     }
 
     signProofObject(proofObject: IProofObject, privateKey: string): string  {
-        console.log("ProofmeUtilsProvider signProofObject");
         return signProofObject(proofObject, privateKey);
     }
 }

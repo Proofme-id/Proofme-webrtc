@@ -137,9 +137,7 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
     }
-    console.log("before reOrderCredentialObject:", JSON.stringify(credentialObject));
     credentialObject = reOrderCredentialObject(credentialObject);
-    console.log("after reOrderCredentialObject:", JSON.stringify(credentialObject));
     const web3Node = new Web3(web3Url);
     const checkedDid: ICheckedDid[] = [];
     let validCredentialsAmount = 0;
@@ -154,7 +152,6 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
             }
         }
         delete credentialObjectWithoutProofSignature.credentials[provider].proof.signature;
-        console.log("RECOVERING THIS OBJECT:", JSON.stringify(credentialObjectWithoutProofSignature));
         const userRecoveredAddress = web3Node.eth.accounts.recover(JSON.stringify(credentialObjectWithoutProofSignature), credentialObject.credentials[provider].proof.signature);
         const correctUserSignature = userCredentialSignatureWrong(credentialObject.credentials[provider].proof.holder, userRecoveredAddress);
         // Check if the user (Identity App) did sign it correct; otherwhise skip this provider
@@ -349,33 +346,20 @@ export function calculateMinutesDifference(dt2: Date, dt1: Date): number {
 }
 
 function reOrderCredentialObject(credentialObject: ICredentialObject): ICredentialObject {
-    console.log("reOrderCredentialObject:", credentialObject);
-    console.log("All providers:", Object.keys(credentialObject.credentials));
     // Loop every provider
     for (const provider of Object.keys(credentialObject.credentials)) {
-        console.log("reOrderCredentialObject provider:", provider);
         const credentialKeys = [];
-        console.log("credentialObject.credentials:", credentialObject.credentials);
-        console.log("credentialObject.credentials[provider]:", credentialObject.credentials[provider]);
-        console.log("credentialObject.credentials[provider].credentials:", credentialObject.credentials[provider].credentials);
-        console.log("Object.keys(credentialObject.credentials[provider].credentials):", Object.keys(credentialObject.credentials[provider].credentials));
         // Get all credential keys
         for (const credentialKey of Object.keys(credentialObject.credentials[provider].credentials)) {
-            console.log("credentialKey:", credentialKey);
             credentialKeys.push(credentialKey);
         }
-        console.log("before sort credentialKeys:", credentialKeys);
         credentialKeys.sort();
-        console.log("after sort credentialKeys:", credentialKeys);
         const reOrderedCredentials = {};
         // Loop the credential keys one by one and re order the credentials so its alphabetical
         for (const credentialKey of credentialKeys) {
             const reOrderedCredential = reOrderCredential(credentialObject.credentials[provider].credentials[credentialKey]);
-            console.log("reOrderedCredential:", reOrderedCredential);
             reOrderedCredentials[credentialKey] = reOrderedCredential;
         }
-        console.log("reOrderedCredentials:", reOrderedCredentials);
-        console.log("reOrderCredentialObject credential[provider].proof:", credentialObject.credentials[provider].proof);
         credentialObject.credentials[provider].proof = reOrderCredentialProof(credentialObject.credentials[provider].proof);
         credentialObject.credentials[provider] = {
             credentials: reOrderedCredentials,
@@ -443,11 +427,8 @@ export function signCredentialObject(credentialObject: ICredentialObject, privat
     if (typeof credentialObject === "string") {
         credentialObject = JSON.parse(credentialObject);
     }
-    console.log("before signCredentialObject:", JSON.stringify(credentialObject));
     credentialObject = reOrderCredentialObject(credentialObject);
-    console.log("after signCredentialObject:", JSON.stringify(credentialObject));
     const web3 = new Web3();
-    console.log("SIGNING THIS OBJECT:", JSON.stringify(credentialObject));
     return web3.eth.accounts.sign(JSON.stringify(credentialObject), privateKey).signature
 }
 
