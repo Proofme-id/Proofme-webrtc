@@ -6,7 +6,7 @@
     "license": "ISC",
     "main": "proofmeid-webrtc.js",
     "scripts": {
-        "build:watch": "npm run tsc-worker && webpack --env.WATCH=true",
+        "build:watch": "npm run tsc-worker && webpack",
         "build:prod": "npm run tsc-worker-prod && webpack --mode=production && cp package.json ./dist/package.json",
         "publish-package": "npm run build:prod && cd ./dist/node && npm publish  && cd ../web && npm publish",
         "tsc-worker": "tsc --p tsconfig.worker.json",
@@ -17,7 +17,7 @@
         "lint:fix": "eslint . --fix --ext .ts"
     },
     "dependencies": {
-        "@angular/core": "13.2.2",
+        "@angular/core": "13.2.6",
         "bignumber.js": "9.0.2",
         "rxjs": "7.5.4",
         "uuid": "8.3.2",
@@ -28,16 +28,16 @@
     "devDependencies": {
         "@types/uuid": "8.3.4",
         "@types/websocket": "1.0.5",
-        "@types/ws": "8.2.3",
-        "@typescript-eslint/eslint-plugin": "5.12.0",
-        "@typescript-eslint/parser": "5.12.0",
+        "@types/ws": "8.5.3",
+        "@typescript-eslint/eslint-plugin": "5.14.0",
+        "@typescript-eslint/parser": "5.14.0",
         "dts-bundle": "0.7.3",
-        "eslint": "8.9.0",
+        "eslint": "8.11.0",
         "eslint-plugin-no-loops": "0.3.0",
-        "fs-extra": "10.0.0",
-        "ts-loader": "9.2.6",
+        "fs-extra": "10.0.1",
+        "ts-loader": "9.2.8",
         "typescript": "4.5.5",
-        "webpack": "5.69.1",
+        "webpack": "5.70.0",
         "webpack-cli": "4.9.2"
     }
 }
