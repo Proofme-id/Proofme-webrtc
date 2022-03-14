@@ -1,3 +1,5 @@
+import dts from "dts-bundle";
+
 function DtsBundlePlugin(name, outputPath) {
     this.name = name;
     this.outputPath = outputPath;
@@ -9,11 +11,10 @@ DtsBundlePlugin.prototype.apply = function (compiler) {
             name: "DtsBundlePlugin"
         },
         () => {
-            var dts = require('dts-bundle');
 
             dts.bundle({
                 name: this.name,
-                main: './build/index.d.ts',
+                main: "./build/index.d.ts",
                 out: this.outputPath,
                 removeSource: false,
                 exclude: /index.d.ts/g,
@@ -23,4 +24,4 @@ DtsBundlePlugin.prototype.apply = function (compiler) {
     );
 };
 
-module.exports = DtsBundlePlugin;
+export default DtsBundlePlugin;
