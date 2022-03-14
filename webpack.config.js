@@ -78,7 +78,8 @@ export default (env) => {
                             },
                             { loader: "@angular-devkit/build-optimizer/webpack-loader" }
                         ]
-                    }]
+                    }
+                ]
             },
             resolve,
             mode,
