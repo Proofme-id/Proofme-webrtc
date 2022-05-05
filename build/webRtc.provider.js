@@ -74,6 +74,8 @@ let WebRtcProvider = class WebRtcProvider {
      * Only disconnect on this application and send no disconnect over the data channel
      */
     disconnect() {
+        clearTimeout(this.pongCheckInterval);
+        clearTimeout(this.pingTimeout);
         console.log("Disconnect");
         if (this.peerConnection) {
             console.log("Peerconnection closed");
