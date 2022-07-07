@@ -66,7 +66,7 @@ export async function validCredentialsTrustedPartiesFunc(
                             const providerCredentialKey = `${credential.provider}_${currentCredentialKey}`;
                             if (!claimAllowedCredentialKeys.includes(providerCredentialKey)) {
                                 invalidKeyProvider = providerCredentialKey;
-                                console.log(`Provider ${did} was not allowed to issue key ${providerCredentialKey}. Skipping this one`)
+                                // console.log(`Provider ${did} was not allowed to issue key ${providerCredentialKey}. Skipping this one`)
                                 break;
                             }
                             if (!invalidKeyProvider) {
@@ -104,8 +104,8 @@ export async function validCredentialsTrustedPartiesFunc(
                 }
             }
         }
-        console.log("trusted check validCredentialsAmount:", validCredentialsAmount);
-        console.log("trusted check credentialsAmount:", credentialsAmount);
+        // console.log("trusted check validCredentialsAmount:", validCredentialsAmount);
+        // console.log("trusted check credentialsAmount:", credentialsAmount);
         if (validCredentialsAmount === credentialsAmount) {
             return {
                 credentials: credentialObject.credentials as any,
@@ -238,8 +238,8 @@ export async function validCredentialsFunc(credentialObject: ICredentialObject, 
             });
         }
     }
-    console.log("only cred validCredentialsAmount:", validCredentialsAmount);
-    console.log("only cred credentialsAmount:", credentialsAmount);
+    // console.log("only cred validCredentialsAmount:", validCredentialsAmount);
+    // console.log("only cred credentialsAmount:", credentialsAmount);
     // When the user signature is incorrect we don't validate any more when there is 1 provider so credentialsamount should be more than 0
     if (credentialsAmount > 0 && validCredentialsAmount === credentialsAmount) {
         return {
