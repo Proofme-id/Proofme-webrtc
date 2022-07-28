@@ -94,11 +94,34 @@ export class WebRtcProvider {
 }
 
 export class ProofmeUtilsProvider {
+    proofmeUtils: ProofmeUtils;
     validCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
     validCredentialsTrustedParties(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
     signCredential(credential: ICredential, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
     signProofObject(proofObject: IProofObject, privateKey: string): string;
+}
+
+export class ProofmeUtils {
+    validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
+    validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
+    userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
+    issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
+    didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
+    knownAddressesContains(list: any[], sha3Key: string, didContractAddress: string): boolean;
+    getSha3Key(key: string, web3Node: any): any;
+    getKeyPurpose(keyManagerContract: any, key: string): Promise<string>;
+    calculateMinutesDifference(dt2: Date, dt1: Date): number;
+    reOrderCredentialObject(credentialObject: ICredentialObject): ICredentialObject;
+    reOrderCredential(credential: ICredential): ICredential;
+    sortObjectAlphabetically(object: any): any;
+    reOrderCredentialProof(proof: IProof): IProof;
+    signCredential(credential: ICredential, privateKey: string): string;
+    signCredentialObject(credentialObject: ICredentialObject, privateKey: string): string;
+    getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
+    signProofObject(proofObject: IProofObject, privateKey: string): string;
+    reOrderProofObject(proofObject: IProofObject): IProofObject;
+    requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult;
 }
 
 export interface IRTCConnectionConfig {
@@ -199,23 +222,6 @@ export interface IRequestedCredentialsCheckResult {
     missingMessage?: string;
     credentials?: ICredentialObject;
 }
-
-export function validCredentialsTrustedPartiesFunc(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
-export function validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
-export function userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
-export function issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
-export function didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
-export function knownAddressesContains(list: any[], sha3Key: string, didContractAddress: string): boolean;
-export function getSha3Key(key: string, web3Node: any): any;
-export function getKeyPurpose(keyManagerContract: any, key: string): Promise<string>;
-export function calculateMinutesDifference(dt2: Date, dt1: Date): number;
-export function sortObjectAlphabetically(object: any): any;
-export function reOrderCredentialProof(proof: IProof): IProof;
-export function signCredential(credential: ICredential, privateKey: string): string;
-export function signCredentialObject(credentialObject: ICredentialObject, privateKey: string): string;
-export function getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
-export function signProofObject(proofObject: IProofObject, privateKey: string): string;
-export function reOrderProofObject(proofObject: IProofObject): IProofObject;
 
 export interface ICredential {
     credentialSubject: {
