@@ -182,6 +182,7 @@ export interface IRequestedCredentialKey {
     name?: string;
     required: boolean;
     expectedValue?: string | boolean | number;
+    verified?: boolean;
 }
 
 export interface IValidatedCredentials {
@@ -207,9 +208,9 @@ export interface ICredentialKeyObject {
 }
 
 export interface IRequestedCredentials {
+    by?: string;
     credentials: IRequestedCredentialKey[];
     description?: string;
-    by?: string;
     minimumRequired?: {
         data: string[];
         amount: number;

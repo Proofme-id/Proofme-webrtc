@@ -4,4 +4,5 @@ export interface IRequestedCredentialKey {
     name?: string;
     required: boolean;
     expectedValue?: string | boolean | number;
+    verified?: boolean;
 }
