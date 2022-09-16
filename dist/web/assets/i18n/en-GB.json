@@ -1,0 +1,16 @@
+{
+	"PROOFME": {
+		"PURPOSE": {
+            "AGE_VERIFICATION": "Age verification",
+            "KYC_VERIFICATION": "Kyc verification",
+            "ACCESS_CONTROL": "Access control",
+            "ONLINE_VERIFICATION": "Online verification",
+            "IDENTIFICATION": "Identification"
+        },
+        "STORAGE": {
+            "DATABASE": "Database",
+            "CERTIFICATE": "Certificate",
+            "NOT_STORED": "Not stored"
+        }
+	}
+}

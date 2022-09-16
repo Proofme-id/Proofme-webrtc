@@ -8,14 +8,17 @@
     "type": "module",
     "scripts": {
         "build:watch": "npm run tsc-worker && webpack",
-        "build:prod": "npm run tsc-worker-prod && webpack --mode=production && cp package.json ./dist/package.json",
-        "publish-package": "npm run build:prod && cd ./dist/node && npm publish  && cd ../web && npm publish",
+        "build": "npm run clean && npm run tsc-worker-prod && webpack --mode=production && cp package.json ./dist/package.json",
+        "publish-package": "npm run build && cd ./dist/node && npm publish && cd ../web && npm publish",
         "tsc-worker": "tsc --p tsconfig.worker.json",
         "tsc-worker-prod": "tsc --p tsconfig.worker.prod.json",
         "watch": "tsc -w",
         "lint": "eslint . --ext .ts",
         "lint:json": "eslint . --ext .ts -f json -o eslint-results.json",
-        "lint:fix": "eslint . --fix --ext .ts"
+        "lint:fix": "eslint . --fix --ext .ts",
+        "postbuild": "copyfiles -f src/assets/i18n/*.json dist/web/assets/i18n",
+        "prestart": "copyfiles -f src/assets/i18n/*json dist/web/assets/i18n",
+        "clean": "rm -f dist/web/proofmeid-webrtc-web.d.ts && rm -f dist/web/proofmeid-webrtc-web.js"
     },
     "dependencies": {
         "@angular-devkit/build-optimizer": "^0.1302.1",

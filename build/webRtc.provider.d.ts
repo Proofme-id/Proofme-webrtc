@@ -10,6 +10,7 @@ export declare class WebRtcProvider {
     wsClient: w3cwebsocket;
     receivedActions$: BehaviorSubject<any>;
     uuid$: BehaviorSubject<string>;
+    websocketMessage$: BehaviorSubject<any>;
     websocketConnectionClosed$: BehaviorSubject<boolean>;
     websocketConnectionOpen$: BehaviorSubject<boolean>;
     websocketConnectionError$: BehaviorSubject<boolean>;
@@ -64,4 +65,10 @@ export declare class WebRtcProvider {
      * @param uuid The UUID to connect to
      */
     setupPeerconnection(uuid: string): Promise<void>;
+    /**
+     * This method will setup the peerconnection and datachannel
+     * It will also emit received actions over an observable
+     * @param uuid The UUID to connect to
+     */
+    setupClientPeerconnection(): Promise<void>;
 }

@@ -1,0 +1,16 @@
+{
+	"PROOFME": {
+		"PURPOSE": {
+            "AGE_VERIFICATION": "Leeftijds verificatie",
+            "KYC_VERIFICATION": "Kyc verificatie",
+            "ACCESS_CONTROL": "Toegangscontrole",
+            "ONLINE_VERIFICATION": "Online verificatie",
+            "IDENTIFICATION": "Identificatie"
+        },
+        "STORAGE": {
+            "DATABASE": "Database",
+            "CERTIFICATE": "Certificaat",
+            "NOT_STORED": "Niet opgeslagen"
+        }
+	}
+}

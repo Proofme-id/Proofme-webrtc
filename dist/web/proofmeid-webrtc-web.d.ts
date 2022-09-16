@@ -37,6 +37,7 @@ export class WebRtcProvider {
         wsClient: w3cwebsocket;
         receivedActions$: BehaviorSubject<any>;
         uuid$: BehaviorSubject<string>;
+        websocketMessage$: BehaviorSubject<any>;
         websocketConnectionClosed$: BehaviorSubject<boolean>;
         websocketConnectionOpen$: BehaviorSubject<boolean>;
         websocketConnectionError$: BehaviorSubject<boolean>;
@@ -91,6 +92,12 @@ export class WebRtcProvider {
             * @param uuid The UUID to connect to
             */
         setupPeerconnection(uuid: string): Promise<void>;
+        /**
+            * This method will setup the peerconnection and datachannel
+            * It will also emit received actions over an observable
+            * @param uuid The UUID to connect to
+            */
+        setupClientPeerconnection(): Promise<void>;
 }
 
 export class ProofmeUtilsProvider {
@@ -136,6 +143,8 @@ export interface IRTCConnectionConfig {
 export interface IWebRTCConfig {
     signalingUrl: string;
     isHost: boolean;
+    channel?: string;
+    data?: any;
 }
 
 export interface IProofObject {
@@ -208,13 +217,21 @@ export interface ICredentialKeyObject {
 }
 
 export interface IRequestedCredentials {
-    by?: string;
     credentials: IRequestedCredentialKey[];
     description?: string;
+    purpose?: IProofmeDataPurpose;
+    proof?: {
+        holder: string;
+        nonce: number;
+        signature?: string;
+        type: string;
+    };
     minimumRequired?: {
         data: string[];
         amount: number;
     };
+    requester?: string;
+    storage?: IProofmeDataStorage;
 }
 
 export interface IRequestedCredentialsCheckResult {
@@ -222,6 +239,20 @@ export interface IRequestedCredentialsCheckResult {
     missingKeys: IRequestedCredentialKey[];
     missingMessage?: string;
     credentials?: ICredentialObject;
+}
+
+export enum IProofmeDataPurpose {
+    AGE_VERIFICATION = "AGE_VERIFICATION",
+    KYC_VERIFICATION = "KYC_VERIFICATION",
+    ACCESS_CONTROL = "ACCESS_CONTROL",
+    ONLINE_VERIFICATION = "ONLINE_VERIFICATION",
+    IDENTIFICATION = "IDENTIFICATION"
+}
+
+export enum IProofmeDataStorage {
+    DATABASE = "DATABASE",
+    CERTIFICATE = "CERTIFICATE",
+    NOT_STORED = "NOT_STORED"
 }
 
 export interface ICredential {

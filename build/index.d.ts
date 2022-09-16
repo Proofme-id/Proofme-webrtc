@@ -13,3 +13,5 @@ export { ICredentialObject } from "./interfaces/credentialsObject.interface";
 export { ICredentialKeyObject } from "./interfaces/credentialKeyObject.interface";
 export { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
 export { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
+export { IProofmeDataPurpose } from "./enums/proofmeDataPurpose";
+export { IProofmeDataStorage } from "./enums/proofmeDataStorage";

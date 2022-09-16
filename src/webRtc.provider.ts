@@ -13,6 +13,7 @@ export class WebRtcProvider {
     wsClient: w3cwebsocket = null; // The websocket connection between client and signaling server or host and signaling server
     receivedActions$ = new BehaviorSubject(null); // Whenever an action is received, this observable will emit an event
     uuid$ = new BehaviorSubject<string>(null); // Whenever the UUID is set, it will emit an event (so that the host can set it somewhere in like a QR)
+    websocketMessage$ = new BehaviorSubject<any>(null); // Whenever there is an event on the websocket, this observable will emit
     websocketConnectionClosed$ = new BehaviorSubject<boolean>(null); // Whenever there is an event on the websocket, this observable will emit
     websocketConnectionOpen$ = new BehaviorSubject<boolean>(null); // Whenever there is an event on the websocket, this observable will emit
     websocketConnectionError$ = new BehaviorSubject<boolean>(null); // Whenever there is an error event on the websocket, this observable will emit
@@ -130,6 +131,7 @@ export class WebRtcProvider {
             clearTimeout(this.connectionTimeout);
         }
         this.uuid$ = new BehaviorSubject(null);
+        this.websocketMessage$ = new BehaviorSubject(null);
         this.websocketConnectionClosed$ = new BehaviorSubject(null);
         this.websocketConnectionOpen$ = new BehaviorSubject(null);
         this.websocketConnectionError$ = new BehaviorSubject(null);
@@ -139,8 +141,13 @@ export class WebRtcProvider {
             // console.log("signalingUrl undefined, falling back to default");
             signalingUrl = "wss://auth.proofme.id";
         }
-        // console.log("Connecting to signaling server:", signalingUrl);
-        this.wsClient = new w3cwebsocket(signalingUrl);
+        console.log("Connecting to signaling server:", signalingUrl);
+        console.log("webRtcConfig.channelId:", webRtcConfig.channel);
+        let url = `${signalingUrl}?channel=${webRtcConfig.channel}`;
+        if (webRtcConfig.data) {
+            url = `${url}&data=${webRtcConfig.data}`;
+        }
+        this.wsClient = new w3cwebsocket(url);
         // So if there is not a success connection after 10 seconds, close the socket and send an error
         this.connectionTimeout = setTimeout(() => {
             if (connectionSuccess !== true) {
@@ -167,6 +174,8 @@ export class WebRtcProvider {
             this.websocketConnectionOpen$.next(true);
         });
         this.wsClient.onmessage = (async msg => {
+            // console.log("WebRTC library received msg:", msg);
+            this.websocketMessage$.next(msg);
             if (msg.data) {
 
                 let data: any;
@@ -301,7 +310,7 @@ export class WebRtcProvider {
                         // console.log("Received answer");
                         // console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                         // The client will send an answer and the host will set it as a description
-                        if (answer && this.webRtcConfig.isHost) {
+                        if (answer) {
                             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
                         }
                         break;
@@ -314,9 +323,23 @@ export class WebRtcProvider {
                             await this.peerConnection.addIceCandidate(clientCandidate);
                         }
                         break;
+                    case "client":
+                        // console.log("Client action received");
+                        
+                        if (webRtcConnectionConfig) {
+                            this.webRtcConnectionConfig = webRtcConnectionConfig;
+                            if (!this.webRtcConfig.isHost) {
+                                // console.log("Is not host so sending offer");
+                                await this.setupPeerconnection(this.hostUuid);
+                                await this.sendOffer(this.peerConnection, this.wsClient);
+                            } else {
+                                // console.log("Doing nothing");
+                            }
+                        }
+                        break;
                     default:
                         // The default
-                        console.error("Websocket onmessage default");
+                        // console.error("Websocket onmessage default");
                         break;
                 }
             }
@@ -344,12 +367,83 @@ export class WebRtcProvider {
      * @param uuid The UUID to connect to
      */
     async setupPeerconnection(uuid: string): Promise<void> {
-        // console.log("setupPeerconnection with uuid:", uuid);
+        // console.log("setupPeerconnection 2 with uuid:", uuid);
         // console.log("this.webRtcConnectionConfig:", this.webRtcConnectionConfig);
         this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
         this.dataChannel = this.peerConnection.createDataChannel(uuid);
 
         this.peerConnection.addEventListener("datachannel", event => {
+
+            // console.log("setupPeerconnection event:", event);
+
+            event.channel.onmessage = (async eventMessage => {
+                let data: any;
+
+                // console.log("eventMessage:", eventMessage);
+
+                // accepting only JSON messages
+                try {
+                    data = JSON.parse(eventMessage.data);
+                    // By default this class will only handle the disconnect event. Close the websocket on this side.
+                    switch (data.action) {
+                        case "disconnect":
+                            // console.log("peerConnection disconnect");
+                            this.disconnect();
+                            break;
+                    }
+                    this.receivedActions$.next(data);
+                } catch (e) {
+                    // console.log("peerConnection ERROR: Invalid JSON");
+                    data = {};
+                }
+            });
+            event.channel.onopen = () => {
+                // console.log("Sending p2p connected!");
+                this.receivedActions$.next({ action: "p2pConnected", p2pConnected: true });
+                // console.log("p2p connected so close the websocket connection");
+                this.wsClient.close();
+            };
+        });
+
+        this.peerConnection.addEventListener("iceconnectionstatechange", event => {
+            // console.log("event:", event);
+            // console.log("this.peerConnection.iceConnectionState:", this.peerConnection.iceConnectionState);
+            if (this.peerConnection.iceConnectionState === "disconnected") {
+                this.receivedActions$.next({ action: "p2pConnected", p2pConnected: false });
+                this.peerConnection.close();
+                this.wsClient.send(JSON.stringify({ type: "leave" }));
+                this.wsClient.close();
+            }
+        });
+
+        this.peerConnection.addEventListener("icecandidate", async event => {
+            if (event.candidate) {
+                // console.log("**************** Received candidate over peer, sending to signaller");
+                // console.log("Candidate", event.candidate);
+                try {
+                    const candidate = new RTCIceCandidate(event.candidate);
+                    await this.peerConnection.addIceCandidate(candidate);
+                } catch (e) {
+                    // console.log("ooops", e);
+                }
+                this.wsClient.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
+            }
+        });
+    }
+
+    /**
+     * This method will setup the peerconnection and datachannel
+     * It will also emit received actions over an observable
+     * @param uuid The UUID to connect to
+     */
+    async setupClientPeerconnection(): Promise<void> {
+        // console.log("setupClientPeerconnection");
+        // console.log("this.webRtcConnectionConfig:", this.webRtcConnectionConfig);
+        this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
+        // this.dataChannel = this.peerConnection.createDataChannel(uuid);
+
+        this.peerConnection.addEventListener("datachannel", event => {
+            // console.log("Client peerconnection received event: ", event);
             event.channel.onmessage = (async eventMessage => {
                 let data: any;
 
