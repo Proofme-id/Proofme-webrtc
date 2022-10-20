@@ -30,11 +30,18 @@ export declare class WebRtcProvider {
      */
     setHostUuid(hostUuid: string): void;
     /**
+     * Send data over the P2P data channel
+     * @param action As a string, which action type do you want to send?
+     * @param data The data to send as an object
+     */
+    sendP2PData(action: string, data: any): void;
+    /**
      * Send data over the data channel
      * @param action As a string, which action type do you want to send?
      * @param data The data to send as an object
      */
-    sendData(action: string, data: any): void;
+    sendWebsocketData(action: string, data: any): void;
+    getWebsocket(): w3cwebsocket;
     /**
      * Whenever the UUID is set from the host this observable emits
      * @param uuid The UUID to allow clients connec to

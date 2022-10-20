@@ -41,16 +41,36 @@ export class WebRtcProvider {
     }
 
     /**
-     * Send data over the data channel
+     * Send data over the P2P data channel
      * @param action As a string, which action type do you want to send?
      * @param data The data to send as an object
      */
-    sendData(action: string, data: any): void {
+    sendP2PData(action: string, data: any): void {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
             this.dataChannel.send(JSON.stringify({ action, ...data }));
         } else {
             // console.log(`Attempted to send data with action ${action} but data channel is not open`);
         }
+    }
+
+    /**
+     * Send data over the data channel
+     * @param action As a string, which action type do you want to send?
+     * @param data The data to send as an object
+     */
+    sendWebsocketData(action: string, data: any): void {
+        console.log("this.wsClient:", this.wsClient);
+        console.log("this.wsClient.OPEN:", this.wsClient.OPEN);
+        console.log("this.wsClient.readyState:", this.wsClient.readyState);
+        if (this.wsClient && this.wsClient.readyState === this.wsClient.OPEN) {
+            this.wsClient.send(JSON.stringify({ action, ...data }));
+        } else {
+            console.error(`Attempted to send data with action ${action} but websocket channel is not open`);
+        }
+    }
+
+    getWebsocket(): w3cwebsocket {
+        return this.wsClient;
     }
 
     /**
@@ -273,6 +293,7 @@ export class WebRtcProvider {
                         this.sendPing();
                         break;
                     case "offer":
+                        console.log("P2P - Received offer");
                         // If the application is not the host, it receives an offer whenever a client connects.
                         // The client will send an answer back
                         // console.log("Received offer:", offer);
@@ -307,7 +328,7 @@ export class WebRtcProvider {
                         this.disconnect();
                         break;
                     case "answer":
-                        // console.log("Received answer");
+                        console.log("P2P - Received answer");
                         // console.log("this.peerConnection.connectionState:", this.peerConnection.connectionState);
                         // The client will send an answer and the host will set it as a description
                         if (answer) {

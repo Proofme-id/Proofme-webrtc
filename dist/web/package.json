@@ -1,17 +1,10 @@
 {
     "name": "@proofmeid/webrtc-web",
-    "version": "0.0.123",
+    "version": "0.0.130",
     "description": "WebRTC + Signaling Server",
     "author": "Proofme.ID",
     "license": "ISC",
     "main": "proofmeid-webrtc-web.js",
-    "scripts": {
-        "build:watch": "npm run tsc-worker && webpack --env.WATCH=true",
-        "build:prod": "npm run tsc-worker && webpack --mode=production && cp package.json ./dist/package.json",
-        "publish-package": "npm run build-prod && cd ./dist && npm publish",
-        "tsc-worker": "tsc --p tsconfig.worker.json",
-        "watch": "tsc -w"
-    },
     "dependencies": {
         "@angular/core": "13.2.6",
         "bignumber.js": "9.0.2",
