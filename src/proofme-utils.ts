@@ -451,12 +451,18 @@ export class ProofmeUtils {
     }
 
     signProofObject(proofObject: IProofObject, privateKey: string) {
+        console.log("1. signProofObject");
         // If the object is stringified
         if (typeof proofObject === "string") {
+            console.log("2. signProofObject");
             proofObject = JSON.parse(proofObject);
+            console.log("3. signProofObject");
         }
+        console.log("4. signProofObject");
         proofObject = this.reOrderProofObject(proofObject);
+        console.log("5. signProofObject");
         const web3 = new Web3();
+        console.log("6. signProofObject");
         return web3.eth.accounts.sign(JSON.stringify(proofObject), privateKey).signature
     }
 

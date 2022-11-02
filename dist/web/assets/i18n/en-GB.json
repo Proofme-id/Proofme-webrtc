@@ -1,5 +1,21 @@
 {
 	"PROOFME": {
+        "KEYS": {
+			"BIRTH_DATE": "Birthdate",
+			"DOCUMENT_EXPIRY_DATE": "Expiry date",
+			"EMAIL": "E-mail",
+			"FIRST_NAME": "Firstname",
+			"GENDER": "Gender",
+			"ISSUING_AUTHORITY": "Issuing authority",
+			"LAST_NAME": "Lastname",
+			"NATIONALITY": "Nationality",
+			"OLDER_THAN_12": "Older than 12",
+			"OLDER_THAN_16": "Older than 16",
+			"OLDER_THAN_18": "Older than 18",
+			"OLDER_THAN_21": "Older than 21",
+			"PHONE_NUMBER": "Phonenumber",
+			"PHOTO": "Photo"
+		},
 		"PURPOSE": {
             "AGE_VERIFICATION": "Age verification",
             "KYC_VERIFICATION": "Kyc verification",

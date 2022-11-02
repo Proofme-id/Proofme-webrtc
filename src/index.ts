@@ -2,7 +2,10 @@ export { SignalingServer } from "./signalingServer";
 export { WebRtcProvider } from "./webRtc.provider";
 export { ProofmeUtilsProvider } from "./proofme-utils.provider";
 export { ProofmeUtils } from "./proofme-utils";
+export { SignalServerV2 } from "./signalServer/signalServerV2";
+export { getSubDomain } from "./utils/global/v1Utils";
 export { IRTCConnectionConfig } from "./interfaces/rtcConnectionConfig.interface";
+export { IConnectionDetails } from "./interfaces/connectionDetails";
 export { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 export { IProofObject } from "./interfaces/proof-object.interface";
 export { IProof } from "./interfaces/proof.interface";
@@ -15,3 +18,4 @@ export { IRequestedCredentials } from "./interfaces/requestedCredentials.interfa
 export { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 export { IProofmeDataPurpose } from "./enums/proofmeDataPurpose";
 export { IProofmeDataStorage } from "./enums/proofmeDataStorage";
+export { checkKeyForDid } from "./utils/smartContracts/smartContractUtils"

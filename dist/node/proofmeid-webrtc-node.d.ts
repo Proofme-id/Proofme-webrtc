@@ -4,11 +4,16 @@
 //   ../rxjs
 //   ../websocket
 //   ../web3
+//   ../wrtc
 
 import * as http from "http";
 import { BehaviorSubject } from "rxjs";
 import { w3cwebsocket } from "websocket";
 import Web3 from "web3";
+import { Subject } from "rxjs";
+import { request, server as WebSocketServer } from "websocket";
+import { connection } from "websocket";
+import { RTCPeerConnection, RTCDataChannel } from "wrtc";
 
 export class SignalingServer {
         wsServer: any;
@@ -138,6 +143,32 @@ export class ProofmeUtils {
     requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult;
 }
 
+export class SignalServerV2 {
+        wsServer: WebSocketServer;
+        wsRequest$: Subject<any>;
+        /**
+            *
+            * @param httpServer
+            */
+        startSignal(httpServer: http.Server): void;
+        /**
+            * Send UTFData to connection.
+            * @param channel
+            * @param message
+            */
+        sendTo(channel: any, message: any): void;
+        /**
+            * Send error
+            * @param reason
+            * @param
+            */
+        rejectConnection(reason: string, request: any): void;
+        setupP2PConnection(request: request, validSign: boolean, channel: string, originAllowed: boolean, turnExpiration: number, turnUrl: string, turnSecret: string, signalServer: string, requestedCredentials: IRequestedCredentials, actionType: string, data: any): Promise<any>;
+        setupWebsocketListeners(connection: IConnectionDetails): void;
+}
+
+export function getSubDomain(url: string): string;
+
 export interface IRTCConnectionConfig {
     stunEnabled: boolean;
     stunUrl: string;
@@ -145,6 +176,17 @@ export interface IRTCConnectionConfig {
     turnUrl: string;
     turnSecret: string;
     turnExpiration: number;
+}
+
+export interface IConnectionDetails extends connection {
+    uuid?: string;
+    did?: string;
+    publicKey?: string;
+    authenticated?: boolean;
+    host?: boolean;
+    channel?: string;
+    origin?: string;
+    webRtcClient?: WebRTCClientV2;
 }
 
 export interface IWebRTCConfig {
@@ -262,6 +304,8 @@ export enum IProofmeDataStorage {
     NOT_STORED = "NOT_STORED"
 }
 
+export function checkKeyForDid(web3Url: string, contractAddress: string, publicKey: string, keyToCheck: EDIDAccessLevel): Promise<boolean>;
+
 export interface ICredential {
     credentialSubject: {
         credential: {
@@ -289,5 +333,46 @@ export interface ICredential {
     verifiedCredential?: boolean;
     verified?: boolean;
     version: string;
+}
+
+export class WebRTCClientV2 {
+        peerConnection: RTCPeerConnection;
+        dataChannel: RTCDataChannel;
+        clientChannel: IConnectionDetails;
+        webRtcConnectionConfig: RTCConfiguration;
+        requestedCredentials: IRequestedCredentials;
+        hostWsConnection: IConnectionDetails;
+        actionType: string;
+        dataChannelOpen$: Subject<void>;
+        dataChannelMessage$: Subject<any>;
+        data: any;
+        constructor(webRtcConnectionConfig: RTCConfiguration, requestedCredentials: IRequestedCredentials, hostWsConnection: IConnectionDetails, actionType: string, data: any);
+        /**
+            * This method will setup the peerconnection and datachannel
+            * It will also emit received actions over an observable
+            * @param uuid The UUID to connect to
+            */
+        setupPeerconnection(channelUuid: string): Promise<void>;
+        /**
+            * The host will send an offer when a client connects to his UUID
+            */
+        sendOffer(): Promise<void>;
+        /**
+            * Send data over the data channel
+            * @param action As a string, which action type do you want to send?
+            * @param data The data to send as an object
+            */
+        sendData(action: string, data: any): void;
+        setRemoteDescription(offer: string): Promise<void>;
+        addCandidate(candidate: string): Promise<void>;
+        sendAnswer(): Promise<void>;
+        setClientChannel(channel: IConnectionDetails): void;
+}
+
+export enum EDIDAccessLevel {
+    MANAGEMENT_KEY = 1,
+    ACTION_KEY = 2,
+    CLAIM_SIGNER_KEY = 3,
+    ENCRYPTION_KEY = 4
 }
 

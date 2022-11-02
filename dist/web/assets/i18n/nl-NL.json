@@ -1,5 +1,21 @@
 {
 	"PROOFME": {
+        "KEYS": {
+			"BIRTH_DATE": "Geboortedatum",
+			"DOCUMENT_EXPIRY_DATE": "Vervaldatum",
+			"EMAIL": "E-mail",
+			"FIRST_NAME": "Voornaam",
+			"GENDER": "Geslacht",
+			"ISSUING_AUTHORITY": "Autoriteit van afgifte",
+			"LAST_NAME": "Achternaam",
+			"NATIONALITY": "Nationaliteit",
+			"OLDER_THAN_12": "Ouder dan 12",
+			"OLDER_THAN_16": "Ouder dan 16",
+			"OLDER_THAN_18": "Ouder dan 18",
+			"OLDER_THAN_21": "Ouder dan 21",
+			"PHONE_NUMBER": "Telefoonnummer",
+			"PHOTO": "Foto"
+		},
 		"PURPOSE": {
             "AGE_VERIFICATION": "Leeftijds verificatie",
             "KYC_VERIFICATION": "Kyc verificatie",

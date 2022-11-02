@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IProofmeDataStorage = exports.IProofmeDataPurpose = exports.ProofmeUtils = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
+exports.checkKeyForDid = exports.IProofmeDataStorage = exports.IProofmeDataPurpose = exports.getSubDomain = exports.SignalServerV2 = exports.ProofmeUtils = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
 var signalingServer_1 = require("./signalingServer");
 Object.defineProperty(exports, "SignalingServer", { enumerable: true, get: function () { return signalingServer_1.SignalingServer; } });
 var webRtc_provider_1 = require("./webRtc.provider");
@@ -9,8 +9,14 @@ var proofme_utils_provider_1 = require("./proofme-utils.provider");
 Object.defineProperty(exports, "ProofmeUtilsProvider", { enumerable: true, get: function () { return proofme_utils_provider_1.ProofmeUtilsProvider; } });
 var proofme_utils_1 = require("./proofme-utils");
 Object.defineProperty(exports, "ProofmeUtils", { enumerable: true, get: function () { return proofme_utils_1.ProofmeUtils; } });
+var signalServerV2_1 = require("./signalServer/signalServerV2");
+Object.defineProperty(exports, "SignalServerV2", { enumerable: true, get: function () { return signalServerV2_1.SignalServerV2; } });
+var v1Utils_1 = require("./utils/global/v1Utils");
+Object.defineProperty(exports, "getSubDomain", { enumerable: true, get: function () { return v1Utils_1.getSubDomain; } });
 var proofmeDataPurpose_1 = require("./enums/proofmeDataPurpose");
 Object.defineProperty(exports, "IProofmeDataPurpose", { enumerable: true, get: function () { return proofmeDataPurpose_1.IProofmeDataPurpose; } });
 var proofmeDataStorage_1 = require("./enums/proofmeDataStorage");
 Object.defineProperty(exports, "IProofmeDataStorage", { enumerable: true, get: function () { return proofmeDataStorage_1.IProofmeDataStorage; } });
+var smartContractUtils_1 = require("./utils/smartContracts/smartContractUtils");
+Object.defineProperty(exports, "checkKeyForDid", { enumerable: true, get: function () { return smartContractUtils_1.checkKeyForDid; } });
 //# sourceMappingURL=index.js.map
