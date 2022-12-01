@@ -2,6 +2,7 @@
 import { BehaviorSubject } from "rxjs";
 import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 import { w3cwebsocket } from "websocket";
+import { OutgoingHttpHeaders } from "http";
 export declare class WebRtcProvider {
     webRtcConfig: IWebRTCConfig;
     hostUuid: string;
@@ -40,7 +41,7 @@ export declare class WebRtcProvider {
      * @param action As a string, which action type do you want to send?
      * @param data The data to send as an object
      */
-    sendWebsocketData(action: string, data: any): void;
+    sendWebsocketData(action: string, data: any): boolean;
     getWebsocket(): w3cwebsocket;
     /**
      * Whenever the UUID is set from the host this observable emits
@@ -64,7 +65,7 @@ export declare class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void>;
+    launchWebsocketClient(webRtcConfig: IWebRTCConfig, headers?: OutgoingHttpHeaders): Promise<void>;
     sendPing(): void;
     /**
      * This method will setup the peerconnection and datachannel

@@ -1,8 +1,10 @@
 import Web3 from "web3";
+import { EDIDAccessLevel } from "./enums/didAccessLevel.enum";
+import { ESignatureTypes } from "./enums/signatureTypes.enum";
 import { ICheckedDid } from "./interfaces/checkedDid.interface";
+import { ISignedContent } from "./interfaces/claims/signedContent.interface";
 import { ICredential } from "./interfaces/credential.interface";
 import { ICredentialObject } from "./interfaces/credentialsObject.interface";
-import { IProofObject } from "./interfaces/proof-object.interface";
 import { IProof } from "./interfaces/proof.interface";
 import { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
 import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
@@ -10,8 +12,8 @@ import { IValidatedCredentials } from "./interfaces/validatedCredentials.interfa
 import { claimHolderAbi } from "./smartcontracts/claimHolderAbi";
 
 export class ProofmeUtils {
-    
-    async validCredentialsTrustedPartiesFunc(
+
+    async isValidCredentials(
         credentialObject: ICredentialObject,
         web3Url: string,
         requestedCredentials: IRequestedCredentials,
@@ -20,12 +22,13 @@ export class ProofmeUtils {
         livenessCheckRequired?: boolean
     ): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult> {
         const web3 = new Web3(web3Url);
+        
         const requestedCheckResult = this.requestedCredentialsCorrect(credentialObject, requestedCredentials);
         if (!requestedCheckResult.success) {
             requestedCheckResult.credentials = credentialObject;
             return requestedCheckResult;
         }
-        const result = await this.validCredentialsFunc(credentialObject, web3Url, checkUserNonce, livenessCheckRequired);
+        const result = await this.checkCredentials(credentialObject, web3Url, checkUserNonce, livenessCheckRequired);
         // If the "normal" check was not valid, don't check the trusted parties but return the result
         if (!result.valid) {
             return result;
@@ -68,7 +71,6 @@ export class ProofmeUtils {
                                 const providerCredentialKey = `${credential.provider}_${currentCredentialKey}`;
                                 if (!claimAllowedCredentialKeys.includes(providerCredentialKey)) {
                                     invalidKeyProvider = providerCredentialKey;
-                                    // console.log(`Provider ${did} was not allowed to issue key ${providerCredentialKey}. Skipping this one`)
                                     break;
                                 }
                                 if (!invalidKeyProvider) {
@@ -106,8 +108,6 @@ export class ProofmeUtils {
                     }
                 }
             }
-            // console.log("trusted check validCredentialsAmount:", validCredentialsAmount);
-            // console.log("trusted check credentialsAmount:", credentialsAmount);
             if (validCredentialsAmount === credentialsAmount) {
                 return {
                     credentials: credentialObject.credentials as any,
@@ -134,7 +134,7 @@ export class ProofmeUtils {
 
     }
 
-    async validCredentialsFunc(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials> {
+    async checkCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials> {
         // If the object is stringified
         if (typeof credentialObject === "string") {
             credentialObject = JSON.parse(credentialObject);
@@ -240,8 +240,6 @@ export class ProofmeUtils {
                 });
             }
         }
-        // console.log("only cred validCredentialsAmount:", validCredentialsAmount);
-        // console.log("only cred credentialsAmount:", credentialsAmount);
         // When the user signature is incorrect we don't validate any more when there is 1 provider so credentialsamount should be more than 0
         if (credentialsAmount > 0 && validCredentialsAmount === credentialsAmount) {
             return {
@@ -326,14 +324,14 @@ export class ProofmeUtils {
         }
     }
 
-    getSha3Key(key: string, web3Node: any) {
-        return web3Node.utils.keccak256(key);
+    getSha3Key(key: string, web3: Web3) {
+        return web3.utils.keccak256(key);
     }
 
-    async getKeyPurpose(keyManagerContract: any, key: string): Promise<string> {
+    async getKeyPurpose(keyManagerContract: any, key: string): Promise<EDIDAccessLevel> {
         // Get Events
         if (keyManagerContract.options.address === null) {
-            return Promise.resolve("-1");
+            return Promise.resolve(null);
         } else {
             return await keyManagerContract.methods.getKeyPurpose(key).call();
         }
@@ -393,7 +391,7 @@ export class ProofmeUtils {
         for (const index in keys) {
             const key = keys[index];
             // If we have nested objects, we need to dig deeper
-            if (typeof object[key] == "object" && !(object[key] instanceof Array)) {
+            if (object[key] !== null && typeof object[key] == "object" && !(object[key] instanceof Array)) {
                 sortedObj[key] = this.sortObjectAlphabetically(object[key]);
             } else {
                 sortedObj[key] = object[key];
@@ -412,14 +410,24 @@ export class ProofmeUtils {
         };
     }
 
-    signCredential(credential: ICredential, privateKey: string) {
+    /**
+     * 
+     * @param message - The message to sign (can be anything, object, string, etc.) 
+     * @param privateKey - The private key to sign with
+     * @returns 
+     */
+    getSignature(message: any, privateKey: string): string {
         // If the object is stringified
-        if (typeof credential === "string") {
-            credential = JSON.parse(credential);
+        if (typeof message === "string") {
+            message = JSON.parse(message);
         }
-        credential = this.reOrderCredential(credential);
+        message = this.reOrderObject(message);
         const web3 = new Web3();
-        return web3.eth.accounts.sign(JSON.stringify(credential), privateKey).signature
+        return web3.eth.accounts.sign(JSON.stringify(message), privateKey).signature
+    }
+
+    reOrderObject(contentToSign: ISignedContent): ISignedContent {
+        return this.sortObjectAlphabetically(contentToSign);
     }
 
     signCredentialObject(credentialObject: ICredentialObject, privateKey: string) {
@@ -448,26 +456,6 @@ export class ProofmeUtils {
         } else {
             return Promise.resolve(null);
         }
-    }
-
-    signProofObject(proofObject: IProofObject, privateKey: string) {
-        console.log("1. signProofObject");
-        // If the object is stringified
-        if (typeof proofObject === "string") {
-            console.log("2. signProofObject");
-            proofObject = JSON.parse(proofObject);
-            console.log("3. signProofObject");
-        }
-        console.log("4. signProofObject");
-        proofObject = this.reOrderProofObject(proofObject);
-        console.log("5. signProofObject");
-        const web3 = new Web3();
-        console.log("6. signProofObject");
-        return web3.eth.accounts.sign(JSON.stringify(proofObject), privateKey).signature
-    }
-
-    reOrderProofObject(proofObject: IProofObject): IProofObject {
-        return this.sortObjectAlphabetically(proofObject);
     }
 
     requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult {
@@ -524,5 +512,46 @@ export class ProofmeUtils {
             }
         }
         return checkResult;
+    }
+
+    recoverAddressFromSignature(message: string, signature: string) {
+        const web3 = new Web3();
+        return web3.eth.accounts.recover(message, signature);
+    }
+
+    signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials {
+        requestedCredentials.proof = {
+            holder: did,
+            nonce: Date.now(),
+            type: ESignatureTypes.ECDSA
+        }
+        const signature = this.getSignature(requestedCredentials, privateKey);
+        requestedCredentials.proof.signature = signature;
+        return requestedCredentials;
+    }
+
+    async isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean> {
+        if (requestedCredentials.proof) {
+            // Make a copy since we delete the signature of the object; otherwhise we can only check it once and it's gone forever
+            const requestedCredentialsCopy: IRequestedCredentials = JSON.parse(JSON.stringify(requestedCredentials));
+            delete requestedCredentialsCopy.proof.signature;
+            // Recover the public key
+            const publicKey = this.recoverAddressFromSignature(JSON.stringify(requestedCredentialsCopy), requestedCredentials.proof.signature);
+            const web3 = new Web3(web3Url);
+            const did = requestedCredentials.proof.holder;
+            // Check the access level on the contract
+            const claimHolderContract = new web3.eth.Contract(claimholderAbi, did);
+            const keccak256OrganisationKey = this.getSha3Key(publicKey, web3);
+            const keyPurpose = await this.getKeyPurpose(claimHolderContract, keccak256OrganisationKey) as EDIDAccessLevel;
+            return (keyPurpose === EDIDAccessLevel.MANAGEMENT_KEY || keyPurpose === EDIDAccessLevel.ACTION_KEY);
+        } else {
+            console.error("Requested Credentials doesn't have any proof to check");
+            return false;
+        }
+    }
+
+    privateKeyToPublicKey(privateKey: string): string {
+        const web3 = new Web3();
+        return web3.eth.accounts.privateKeyToAccount(privateKey).address;
     }
 }

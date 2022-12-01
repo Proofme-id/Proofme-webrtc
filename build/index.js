@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkKeyForDid = exports.IProofmeDataStorage = exports.IProofmeDataPurpose = exports.getSubDomain = exports.SignalServerV2 = exports.ProofmeUtils = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
+exports.checkKeyForDid = exports.EProofmeDataStorage = exports.EProofmeDataPurpose = exports.EClaimType = exports.ESignatureTypes = exports.EMimeType = exports.getSubDomain = exports.SignalServerV2 = exports.ProofmeUtils = exports.ProofmeUtilsProvider = exports.WebRtcProvider = exports.SignalingServer = void 0;
 var signalingServer_1 = require("./signalingServer");
 Object.defineProperty(exports, "SignalingServer", { enumerable: true, get: function () { return signalingServer_1.SignalingServer; } });
 var webRtc_provider_1 = require("./webRtc.provider");
@@ -13,10 +13,16 @@ var signalServerV2_1 = require("./signalServer/signalServerV2");
 Object.defineProperty(exports, "SignalServerV2", { enumerable: true, get: function () { return signalServerV2_1.SignalServerV2; } });
 var v1Utils_1 = require("./utils/global/v1Utils");
 Object.defineProperty(exports, "getSubDomain", { enumerable: true, get: function () { return v1Utils_1.getSubDomain; } });
+var mimeTypes_enum_1 = require("./enums/mimeTypes.enum");
+Object.defineProperty(exports, "EMimeType", { enumerable: true, get: function () { return mimeTypes_enum_1.EMimeType; } });
+var signatureTypes_enum_1 = require("./enums/signatureTypes.enum");
+Object.defineProperty(exports, "ESignatureTypes", { enumerable: true, get: function () { return signatureTypes_enum_1.ESignatureTypes; } });
+var claimTypes_enum_1 = require("./enums/claimTypes.enum");
+Object.defineProperty(exports, "EClaimType", { enumerable: true, get: function () { return claimTypes_enum_1.EClaimType; } });
 var proofmeDataPurpose_1 = require("./enums/proofmeDataPurpose");
-Object.defineProperty(exports, "IProofmeDataPurpose", { enumerable: true, get: function () { return proofmeDataPurpose_1.IProofmeDataPurpose; } });
+Object.defineProperty(exports, "EProofmeDataPurpose", { enumerable: true, get: function () { return proofmeDataPurpose_1.EProofmeDataPurpose; } });
 var proofmeDataStorage_1 = require("./enums/proofmeDataStorage");
-Object.defineProperty(exports, "IProofmeDataStorage", { enumerable: true, get: function () { return proofmeDataStorage_1.IProofmeDataStorage; } });
+Object.defineProperty(exports, "EProofmeDataStorage", { enumerable: true, get: function () { return proofmeDataStorage_1.EProofmeDataStorage; } });
 var smartContractUtils_1 = require("./utils/smartContracts/smartContractUtils");
 Object.defineProperty(exports, "checkKeyForDid", { enumerable: true, get: function () { return smartContractUtils_1.checkKeyForDid; } });
 //# sourceMappingURL=index.js.map

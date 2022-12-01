@@ -1,5 +1,5 @@
 import * as http from "http";
-import { Subject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
 import { request, server as WebSocketServer } from "websocket";
 import { getRTCConnectionConfig } from "../helpers/signalHelpers";
@@ -89,7 +89,7 @@ export class SignalServerV2 {
         this.setupWebsocketListeners(connection);
 
         // Host
-        if ((request.origin === "validator" && validSign && channel === null) || (originAllowed && channel === null)) {
+        if ((request.origin === "http://validator" && validSign && channel === null) || (originAllowed && channel === null)) {
             // connection is verified!
             connection.host = true;
             connection.origin = request.origin;
@@ -101,9 +101,9 @@ export class SignalServerV2 {
                 message: `Host initialised ${connection.uuid}`,
                 channelId: connection.uuid,
                 signalServer,
-                ...(request.origin === "validator" && { webRtcConnectionConfig: webRtcConfig })
+                ...(request.origin === "http://validator" && { webRtcConnectionConfig: webRtcConfig })
             });
-            if (request.origin !== "validator") {
+            if (request.origin !== "http://validator") {
                 connection.webRtcClient = new WebRTCClientV2(webRtcConfig, requestedCredentials, connection, actionType, data);
                 await connection.webRtcClient.setupPeerconnection(connection.uuid);
             }
@@ -125,7 +125,7 @@ export class SignalServerV2 {
                     channelId: channel,
                     webRtcConnectionConfig: webRtcConfig
                 });
-                if (hostChannel.origin !== "validator") {
+                if (hostChannel.origin !== "http://validator") {
                     hostChannel.webRtcClient.setClientChannel(connection);
                 }
             } else {
@@ -140,6 +140,7 @@ export class SignalServerV2 {
 
     setupWebsocketListeners(connection: IConnectionDetails): void {
         connection.on("message", async (message) => {
+
             let data: IConnectionData;
 
             // accepting only JSON messages
@@ -152,7 +153,7 @@ export class SignalServerV2 {
                 data = { type: null };
             }
             const { type, offer, answer, candidate } = data;
-            
+
             /**
              * Since validation happens on connection, we only expect 3 type of messages
              * In this order:
@@ -171,7 +172,7 @@ export class SignalServerV2 {
                     // The client sends an offer to the host.
                     if (!connection.host && connection.channel) {
                         const hostChannel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid && conn.host === true);
-                        if (hostChannel.origin === "validator") {
+                        if (hostChannel.origin === "http://validator") {
                             this.sendTo(hostChannel, {
                                 type: "offer",
                                 success: true,
@@ -188,7 +189,7 @@ export class SignalServerV2 {
                     break;
                 case "answer":
                     // The host responds with an answer for the client.
-                    if (connection.host && connection.channel && connection.origin === "validator") {
+                    if (connection.host && connection.channel && connection.origin === "http://validator") {
                         const clientChannel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid);
                         this.sendTo(clientChannel, {
                             type: "answer",
@@ -204,7 +205,7 @@ export class SignalServerV2 {
                     // Host and Client share candidate.
                     if (connection.channel) {
                         const channel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid);
-                        if (channel.origin === "validator" || connection.origin === "validator") {
+                        if (channel.origin === "http://validator" || connection.origin === "http://validator") {
                             this.sendTo(channel, {
                                 type: "candidate",
                                 success: true,
@@ -218,11 +219,23 @@ export class SignalServerV2 {
                         connection.close();
                     }
                     break;
+                // case "hasP2PConnection":
+                //     if (connection.webRtcClient) {
+                //         const readyState = connection.webRtcClient.dataChannel.readyState;
+                //         this.sendTo(connection, {
+                //             type: "clientconnected",
+                //             readyState,
+                //             success: readyState === "open"
+                //         });
+                //     } else {
+                //         this.sendTo(connection, {
+                //             type: "clientconnected",
+                //             success: false
+                //         });
+                //     }
+                //     break;
                 default:
-                    this.sendTo(connection, {
-                        type: "error",
-                        message: "Leave me alone! There is nothing to see here!"
-                    });
+                    // We can also listen to websocket events on the host so we don't want to throw any error here; custom implementation is being made on the application part
                     break;
             }
         });

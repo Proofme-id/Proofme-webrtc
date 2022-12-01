@@ -1,11 +1,11 @@
-import { IProofmeDataPurpose } from "../enums/proofmeDataPurpose";
-import { IProofmeDataStorage } from "../enums/proofmeDataStorage";
+import { EProofmeDataPurpose } from "../enums/proofmeDataPurpose";
+import { EProofmeDataStorage } from "../enums/proofmeDataStorage";
 import { IRequestedCredentialKey } from "./requestedCredentialKey.interface";
 
 export interface IRequestedCredentials {
     credentials: IRequestedCredentialKey[];
     description?: string;
-    purpose?: IProofmeDataPurpose;
+    purpose?: EProofmeDataPurpose;
     proof?: {
         holder: string;
         nonce: number;
@@ -17,5 +17,5 @@ export interface IRequestedCredentials {
         amount: number;
     }
     requester?: string;
-    storage?: IProofmeDataStorage
+    storage?: EProofmeDataStorage
 }

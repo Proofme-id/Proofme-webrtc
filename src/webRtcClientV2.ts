@@ -104,8 +104,9 @@ export class WebRTCClientV2 {
      * @param action As a string, which action type do you want to send?
      * @param data The data to send as an object
      */
-    sendData(action: string, data: any): void {
+     sendP2PData(action: string, data: any): void {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
+            console.log(`Library - Sending action '${action}' with data:`, data);
             this.dataChannel.send(JSON.stringify({ action, ...data }));
         } else {
             console.error(`Library - Attempted to send data with action ${action} but data channel is not open`);

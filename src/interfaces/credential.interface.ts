@@ -2,7 +2,7 @@ export interface ICredential {
     credentialSubject: {
         credential: {
             type: string,
-            value: string
+            value: any
         }
     };
     expirationDate: string;

@@ -58,6 +58,7 @@ let WebRtcProvider = class WebRtcProvider {
      */
     sendP2PData(action, data) {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
+            console.log(`Library - Sending action '${action}' with data:`, data);
             this.dataChannel.send(JSON.stringify(Object.assign({ action }, data)));
         }
         else {
@@ -72,9 +73,11 @@ let WebRtcProvider = class WebRtcProvider {
     sendWebsocketData(action, data) {
         if (this.wsClient && this.wsClient.readyState === this.wsClient.OPEN) {
             this.wsClient.send(JSON.stringify(Object.assign({ action }, data)));
+            return true;
         }
         else {
             console.error(`Websocket - Attempted to send data with action ${action} but websocket channel is not open`);
+            return false;
         }
     }
     getWebsocket() {
@@ -139,7 +142,7 @@ let WebRtcProvider = class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    launchWebsocketClient(webRtcConfig) {
+    launchWebsocketClient(webRtcConfig, headers) {
         return __awaiter(this, void 0, void 0, function* () {
             this.webRtcConfig = webRtcConfig;
             let connectionSuccess = null;
@@ -163,12 +166,14 @@ let WebRtcProvider = class WebRtcProvider {
             if (webRtcConfig.data) {
                 url = `${url}&data=${webRtcConfig.data}`;
             }
-            this.wsClient = new websocket_1.w3cwebsocket(url);
+            this.wsClient = new websocket_1.w3cwebsocket(url, null, null, headers);
             // So if there is not a success connection after 10 seconds, close the socket and send an error
             this.connectionTimeout = setTimeout(() => {
                 if (connectionSuccess !== true) {
                     this.websocketConnectionError$.next(true);
-                    this.wsClient.close();
+                    if (this.wsClient) {
+                        this.wsClient.close();
+                    }
                 }
             }, 10000);
             this.wsClient.onerror = (error => {
@@ -283,6 +288,7 @@ let WebRtcProvider = class WebRtcProvider {
                             // If the application is not the host, it receives an offer whenever a client connects.
                             // The client will send an answer back
                             if (offer && !this.webRtcConfig.isHost) {
+                                console.log("1. setRemoteDescription");
                                 yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(offer));
                                 const hostAnswer = yield this.peerConnection.createAnswer();
                                 yield this.peerConnection.setLocalDescription(hostAnswer);
@@ -311,6 +317,7 @@ let WebRtcProvider = class WebRtcProvider {
                         case "answer":
                             // The client will send an answer and the host will set it as a description
                             if (answer) {
+                                console.log("2. setRemoteDescription");
                                 yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(answer));
                             }
                             break;
@@ -318,6 +325,7 @@ let WebRtcProvider = class WebRtcProvider {
                             // On receiving an candidate from the client
                             if (candidate) {
                                 const clientCandidate = new wrtc_1.RTCIceCandidate(candidate);
+                                console.log("1. addIceCandidate");
                                 yield this.peerConnection.addIceCandidate(clientCandidate);
                             }
                             break;
@@ -390,13 +398,15 @@ let WebRtcProvider = class WebRtcProvider {
                 }
             });
             this.peerConnection.addEventListener("icecandidate", (event) => __awaiter(this, void 0, void 0, function* () {
+                console.log("icecandidate event:", event);
                 if (event.candidate) {
                     try {
                         const candidate = new wrtc_1.RTCIceCandidate(event.candidate);
+                        console.log("2. addIceCandidate");
                         yield this.peerConnection.addIceCandidate(candidate);
                     }
                     catch (error) {
-                        console.error("P2P - Error adding candidate:", error);
+                        // Silence error because it cannot add itself, it will send over websocket
                     }
                     this.wsClient.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
                 }
@@ -411,7 +421,6 @@ let WebRtcProvider = class WebRtcProvider {
     setupClientPeerconnection() {
         return __awaiter(this, void 0, void 0, function* () {
             this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
-            // this.dataChannel = this.peerConnection.createDataChannel(uuid);
             this.peerConnection.addEventListener("datachannel", event => {
                 event.channel.onmessage = ((eventMessage) => __awaiter(this, void 0, void 0, function* () {
                     let data;
@@ -447,10 +456,11 @@ let WebRtcProvider = class WebRtcProvider {
                 if (event.candidate) {
                     try {
                         const candidate = new wrtc_1.RTCIceCandidate(event.candidate);
+                        console.log("3. addIceCandidate");
                         yield this.peerConnection.addIceCandidate(candidate);
                     }
                     catch (error) {
-                        console.error("P2P - Error adding candidate:", error);
+                        // Silence error because it cannot add itself, it will send over websocket
                     }
                     this.wsClient.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
                 }

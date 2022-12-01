@@ -9,7 +9,7 @@ export async function checkKeyForDid(web3Url: string, contractAddress: string, p
         const shaAddress = web3.utils.sha3(publicKey);
         return await contract.methods.keyHasPurpose(shaAddress, keyToCheck).call();
     } catch (error) {
-        console.log("Something went wrong: " + error);
+        console.log("Library - Something went wrong: " + error);
         return false;
     }
 }

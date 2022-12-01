@@ -3,6 +3,7 @@ import { BehaviorSubject } from "rxjs";
 import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
 import { RTCSessionDescription, RTCIceCandidate } from "wrtc";
 import { w3cwebsocket } from "websocket";
+import { OutgoingHttpHeaders } from "http";
 
 @Injectable()
 export class WebRtcProvider {
@@ -47,6 +48,7 @@ export class WebRtcProvider {
      */
     sendP2PData(action: string, data: any): void {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
+            console.log(`Library - Sending action '${action}' with data:`, data);
             this.dataChannel.send(JSON.stringify({ action, ...data }));
         } else {
             console.error(`Websocket - Attempted to send data with action ${action} but data channel is not open`);
@@ -58,11 +60,13 @@ export class WebRtcProvider {
      * @param action As a string, which action type do you want to send?
      * @param data The data to send as an object
      */
-    sendWebsocketData(action: string, data: any): void {
+    sendWebsocketData(action: string, data: any): boolean {
         if (this.wsClient && this.wsClient.readyState === this.wsClient.OPEN) {
             this.wsClient.send(JSON.stringify({ action, ...data }));
+            return true;
         } else {
             console.error(`Websocket - Attempted to send data with action ${action} but websocket channel is not open`);
+            return false;
         }
     }
 
@@ -132,7 +136,7 @@ export class WebRtcProvider {
     /**
      * This method will launch the websocket and listen to events
      */
-    async launchWebsocketClient(webRtcConfig: IWebRTCConfig): Promise<void> {
+    async launchWebsocketClient(webRtcConfig: IWebRTCConfig, headers?: OutgoingHttpHeaders): Promise<void> {
         this.webRtcConfig = webRtcConfig;
 
         let connectionSuccess = null;
@@ -157,12 +161,14 @@ export class WebRtcProvider {
         if (webRtcConfig.data) {
             url = `${url}&data=${webRtcConfig.data}`;
         }
-        this.wsClient = new w3cwebsocket(url);
+        this.wsClient = new w3cwebsocket(url, null, null, headers);
         // So if there is not a success connection after 10 seconds, close the socket and send an error
         this.connectionTimeout = setTimeout(() => {
             if (connectionSuccess !== true) {
                 this.websocketConnectionError$.next(true);
-                this.wsClient.close();
+                if (this.wsClient) {
+                    this.wsClient.close();
+                }
             }
         }, 10000);
         this.wsClient.onerror = (error => {
@@ -392,7 +398,7 @@ export class WebRtcProvider {
                     const candidate = new RTCIceCandidate(event.candidate);
                     await this.peerConnection.addIceCandidate(candidate);
                 } catch (error) {
-                    console.error("P2P - Error adding candidate:", error);
+                    // Silence error because it cannot add itself, it will send over websocket
                 }
                 this.wsClient.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
             }
@@ -407,8 +413,6 @@ export class WebRtcProvider {
     async setupClientPeerconnection(): Promise<void> {
 
         this.peerConnection = new RTCPeerConnection(this.webRtcConnectionConfig);
-        // this.dataChannel = this.peerConnection.createDataChannel(uuid);
-
         this.peerConnection.addEventListener("datachannel", event => {
             event.channel.onmessage = (async eventMessage => {
                 let data: any;
@@ -448,7 +452,7 @@ export class WebRtcProvider {
                     const candidate = new RTCIceCandidate(event.candidate);
                     await this.peerConnection.addIceCandidate(candidate);
                 } catch (error) {
-                    console.error("P2P - Error adding candidate:", error);
+                    // Silence error because it cannot add itself, it will send over websocket
                 }
                 this.wsClient.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
             }
