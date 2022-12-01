@@ -219,21 +219,6 @@ export class SignalServerV2 {
                         connection.close();
                     }
                     break;
-                // case "hasP2PConnection":
-                //     if (connection.webRtcClient) {
-                //         const readyState = connection.webRtcClient.dataChannel.readyState;
-                //         this.sendTo(connection, {
-                //             type: "clientconnected",
-                //             readyState,
-                //             success: readyState === "open"
-                //         });
-                //     } else {
-                //         this.sendTo(connection, {
-                //             type: "clientconnected",
-                //             success: false
-                //         });
-                //     }
-                //     break;
                 default:
                     // We can also listen to websocket events on the host so we don't want to throw any error here; custom implementation is being made on the application part
                     break;
