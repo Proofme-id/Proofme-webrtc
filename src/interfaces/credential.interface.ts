@@ -1,8 +1,10 @@
+import { TCredentialValue } from "../types/credentialValue.type";
+
 export interface ICredential {
     credentialSubject: {
         credential: {
             type: string,
-            value: string
+            value: TCredentialValue
         }
     };
     expirationDate: string;

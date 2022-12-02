@@ -20,16 +20,11 @@ export class SignalingServer {
      * Returns the configuration for the RTC peerconnection
      */
     getRTCConnectionConfig(type: string): RTCConfiguration {
-        // console.log("getRTCConnectionConfig turnEnabled:", this.rtcConnectionConfig.turnEnabled);
-        // console.log("getRTCConnectionConfig stunEnabled:", this.rtcConnectionConfig.stunEnabled);
         if (this.rtcConnectionConfig.turnEnabled) {
-            // console.log("USE TURN");
             const time = Math.floor(Date.now() / 1000);
             const expiration = this.rtcConnectionConfig.turnExpiration;
             const username = `${time + expiration}:${type}`;
             const credential = crypto.createHmac("sha1", this.rtcConnectionConfig.turnSecret).update(username.toString()).digest("base64");
-            // console.log("username:", username);
-            // console.log("credential:", credential);
             return {
                 iceCandidatePoolSize: 5,
                 iceServers: [{
@@ -39,7 +34,6 @@ export class SignalingServer {
                 }],
             } as RTCConfiguration;
         } else if (this.rtcConnectionConfig.stunEnabled) {
-            // console.log("USE STUN");
             return {
                 iceServers: [{
                     urls: [this.rtcConnectionConfig.stunUrl],
@@ -53,7 +47,6 @@ export class SignalingServer {
      * @param server 
      */
     public startSignal(server: http.Server): void {
-        // console.log("Starting Signaling server.");
         this.wsServer = new WebSocket.Server({ server });
 
         const sendTo = (datachannel: RTCDataChannel, message: any) => {
@@ -79,7 +72,6 @@ export class SignalingServer {
                 try {
                     data = JSON.parse(msg);
                 } catch (e) {
-                    // console.log("Invalid JSON");
                     data = {};
                 }
                 const { type, token, host, offer, answer, candidate } = data;
@@ -116,7 +108,6 @@ export class SignalingServer {
                         break;
                     case "ping":
                         // Setup a channel (Host)
-                        // console.log("Host received ping, sending pong");
                         sendTo(ws, {
                             type: "pong"
                         });
@@ -336,7 +327,6 @@ export class SignalingServer {
                     success: true,
                 })
             );
-            // console.log("Connection received from:", ws.uuid);
         });
     }
 }
