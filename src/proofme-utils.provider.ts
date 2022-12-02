@@ -4,6 +4,7 @@ import { ICredentialObject } from "./interfaces/credentialsObject.interface";
 import { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
 import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 import { ProofmeUtils } from "./proofme-utils";
+import { IChallenge } from "./interfaces/challenge.interface";
 
 @Injectable()
 export class ProofmeUtilsProvider {
@@ -24,5 +25,9 @@ export class ProofmeUtilsProvider {
 
     async isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>  {
         return this.proofmeUtils.isValidRequestedCredentials(requestedCredentials, web3Url, claimholderAbi);
+    }
+
+    generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge  {
+        return this.proofmeUtils.generateChallenge(publicKey, did, host, privateKey);
     }
 }

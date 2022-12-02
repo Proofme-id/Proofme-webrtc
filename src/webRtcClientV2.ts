@@ -113,8 +113,12 @@ export class WebRTCClientV2 {
         }
     }
 
-    async setRemoteDescription(offer: string): Promise<void> {
-        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    /**
+     * Sets the remote description of the other side
+     * @param remoteDescription Can be offer or answer depending on the client / host
+     */
+    async setRemoteDescription(remoteDescription: string): Promise<void> {
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(remoteDescription));
     }
 
     async addCandidate(candidate: string): Promise<void> {

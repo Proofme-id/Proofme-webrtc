@@ -288,7 +288,6 @@ let WebRtcProvider = class WebRtcProvider {
                             // If the application is not the host, it receives an offer whenever a client connects.
                             // The client will send an answer back
                             if (offer && !this.webRtcConfig.isHost) {
-                                console.log("1. setRemoteDescription");
                                 yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(offer));
                                 const hostAnswer = yield this.peerConnection.createAnswer();
                                 yield this.peerConnection.setLocalDescription(hostAnswer);
@@ -317,7 +316,6 @@ let WebRtcProvider = class WebRtcProvider {
                         case "answer":
                             // The client will send an answer and the host will set it as a description
                             if (answer) {
-                                console.log("2. setRemoteDescription");
                                 yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(answer));
                             }
                             break;
@@ -325,7 +323,6 @@ let WebRtcProvider = class WebRtcProvider {
                             // On receiving an candidate from the client
                             if (candidate) {
                                 const clientCandidate = new wrtc_1.RTCIceCandidate(candidate);
-                                console.log("1. addIceCandidate");
                                 yield this.peerConnection.addIceCandidate(clientCandidate);
                             }
                             break;
@@ -398,11 +395,9 @@ let WebRtcProvider = class WebRtcProvider {
                 }
             });
             this.peerConnection.addEventListener("icecandidate", (event) => __awaiter(this, void 0, void 0, function* () {
-                console.log("icecandidate event:", event);
                 if (event.candidate) {
                     try {
                         const candidate = new wrtc_1.RTCIceCandidate(event.candidate);
-                        console.log("2. addIceCandidate");
                         yield this.peerConnection.addIceCandidate(candidate);
                     }
                     catch (error) {
@@ -456,7 +451,6 @@ let WebRtcProvider = class WebRtcProvider {
                 if (event.candidate) {
                     try {
                         const candidate = new wrtc_1.RTCIceCandidate(event.candidate);
-                        console.log("3. addIceCandidate");
                         yield this.peerConnection.addIceCandidate(candidate);
                     }
                     catch (error) {

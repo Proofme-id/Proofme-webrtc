@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import { EDIDAccessLevel } from "./enums/didAccessLevel.enum";
 import { ESignatureTypes } from "./enums/signatureTypes.enum";
+import { IChallenge } from "./interfaces/challenge.interface";
 import { ICheckedDid } from "./interfaces/checkedDid.interface";
 import { ISignedContent } from "./interfaces/claims/signedContent.interface";
 import { ICredential } from "./interfaces/credential.interface";
@@ -553,5 +554,20 @@ export class ProofmeUtils {
     privateKeyToPublicKey(privateKey: string): string {
         const web3 = new Web3();
         return web3.eth.accounts.privateKeyToAccount(privateKey).address;
+    }
+
+    generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge {
+        const web3 = new Web3();
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const challenge = `${publicKey}-${did}-${host}-${timestamp}`;
+        const signature = web3.eth.accounts.sign(challenge, privateKey).signature
+        return {
+            did,
+            publicKey,
+            endpoint: host,
+            timestamp,
+            challenge,
+            signature
+        } as IChallenge
     }
 }

@@ -119,6 +119,7 @@ export class ProofmeUtilsProvider {
     getSignature(message: any, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
+    generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
 }
 
 export class ProofmeUtils {
@@ -150,6 +151,7 @@ export class ProofmeUtils {
     signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
     privateKeyToPublicKey(privateKey: string): string;
+    generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
 }
 
 export class SignalServerV2 {
@@ -426,6 +428,15 @@ export const enum EWebsocketReadyState {
 
 export function checkKeyForDid(web3Url: string, contractAddress: string, publicKey: string, keyToCheck: EDIDAccessLevel): Promise<boolean>;
 
+export interface IChallenge {
+    did: string;
+    publicKey: string;
+    endpoint: string;
+    timestamp: string;
+    challenge: string;
+    signature: string;
+}
+
 export enum EDIDAccessLevel {
     NONE = "0",
     MANAGEMENT_KEY = "1",
@@ -438,7 +449,7 @@ export interface ICredential {
     credentialSubject: {
         credential: {
             type: string;
-            value: any;
+            value: TCredentialValue;
         };
     };
     expirationDate: string;
@@ -491,9 +502,21 @@ export class WebRTCClientV2 {
             * @param data The data to send as an object
             */
         sendP2PData(action: string, data: any): void;
-        setRemoteDescription(offer: string): Promise<void>;
+        /**
+            * Sets the remote description of the other side
+            * @param remoteDescription Can be offer or answer depending on the client / host
+            */
+        setRemoteDescription(remoteDescription: string): Promise<void>;
         addCandidate(candidate: string): Promise<void>;
         sendAnswer(): Promise<void>;
         setClientChannel(channel: IConnectionDetails): void;
 }
+
+/**
+  * string = most of the values
+  * string[] = photo vectors
+  * number = no use yet
+  * boolean = older than
+  */
+export type TCredentialValue = string | string[] | number | boolean;
 
