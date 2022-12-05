@@ -19,7 +19,7 @@ export interface ICredential {
     proof?: {
         type: string,
         nonce: number,
-        signature: string
+        signature?: string
         holder: string;
     };
     provider: string;

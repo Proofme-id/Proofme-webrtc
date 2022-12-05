@@ -1,9 +1,11 @@
 import Web3 from "web3";
+import { EClaimType } from "./enums/claimTypes.enum";
 import { EDIDAccessLevel } from "./enums/didAccessLevel.enum";
 import { ESignatureTypes } from "./enums/signatureTypes.enum";
 import { IChallenge } from "./interfaces/challenge.interface";
 import { ICheckedDid } from "./interfaces/checkedDid.interface";
 import { ISignedContent } from "./interfaces/claims/signedContent.interface";
+import { ICompanyInfo } from "./interfaces/companyInfo.interface";
 import { ICredential } from "./interfaces/credential.interface";
 import { ICredentialObject } from "./interfaces/credentialsObject.interface";
 import { IProof } from "./interfaces/proof.interface";
@@ -459,6 +461,30 @@ export class ProofmeUtils {
         }
     }
 
+    async getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any> {
+        const web3 = new Web3(web3Url);
+        const contract = new web3.eth.Contract(claimHolderAbi, contractAddress);
+        const claimIds = await contract.methods.getClaimIdsByType(claimType).call();
+        if (claimIds.length > 0) {
+            try {
+                const rawClaims = await contract.methods.getClaim(claimIds[claimIds.length - 1]).call();
+                const data = web3.utils.toAscii(rawClaims.data)
+
+                if (data.length > 1) {
+                    const parsedClaims = JSON.parse(data);
+                    return Promise.resolve(parsedClaims);
+                } else {
+                    return Promise.resolve(null);
+                }
+            } catch (error) {
+                console.log("Error: ", error)
+                return Promise.resolve(null);
+            }
+        } else {
+            return Promise.resolve(null);
+        }
+    }
+
     requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult {
         const checkResult: IRequestedCredentialsCheckResult = {
             success: true,
@@ -515,9 +541,15 @@ export class ProofmeUtils {
         return checkResult;
     }
 
-    recoverAddressFromSignature(message: string, signature: string) {
+    recoverAddressFromSignature(message: string, signature: string, sortAlphabetically?: boolean) {
         const web3 = new Web3();
-        return web3.eth.accounts.recover(message, signature);
+        if (sortAlphabetically === true) {
+            message = this.sortObjectAlphabetically(JSON.parse(message));
+            return web3.eth.accounts.recover(JSON.stringify(message), signature);
+        } else {
+            return web3.eth.accounts.recover(message, signature);
+        }
+        
     }
 
     signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials {
@@ -536,8 +568,9 @@ export class ProofmeUtils {
             // Make a copy since we delete the signature of the object; otherwhise we can only check it once and it's gone forever
             const requestedCredentialsCopy: IRequestedCredentials = JSON.parse(JSON.stringify(requestedCredentials));
             delete requestedCredentialsCopy.proof.signature;
+
             // Recover the public key
-            const publicKey = this.recoverAddressFromSignature(JSON.stringify(requestedCredentialsCopy), requestedCredentials.proof.signature);
+            const publicKey = this.recoverAddressFromSignature(JSON.stringify(requestedCredentialsCopy), requestedCredentials.proof.signature, true);
             const web3 = new Web3(web3Url);
             const did = requestedCredentials.proof.holder;
             // Check the access level on the contract
@@ -547,6 +580,17 @@ export class ProofmeUtils {
             return (keyPurpose === EDIDAccessLevel.MANAGEMENT_KEY || keyPurpose === EDIDAccessLevel.ACTION_KEY);
         } else {
             console.error("Requested Credentials doesn't have any proof to check");
+            return false;
+        }
+    }
+    
+    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any) {
+        const organisationDid = requestedCredentials.proof.holder;
+        const credentials: ICredential = await this.getClaim(EClaimType.COMPANY_INFO, organisationDid, web3Url, claimHolderAbi);
+        const status = (credentials?.credentialSubject?.credential?.value as ICompanyInfo)?.status;
+        if (status) {
+            return status === true;
+        } else {
             return false;
         }
     }
