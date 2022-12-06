@@ -119,7 +119,9 @@ export class ProofmeUtilsProvider {
     getSignature(message: any, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
+    isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
+    getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>;
 }
 
 export class ProofmeUtils {
@@ -146,10 +148,12 @@ export class ProofmeUtils {
     reOrderObject(contentToSign: ISignedContent): ISignedContent;
     signCredentialObject(credentialObject: ICredentialObject, privateKey: string): string;
     getClaims(claimType: number | string, contractAddress: string, web3: Web3): Promise<any>;
+    getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>;
     requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult;
-    recoverAddressFromSignature(message: string, signature: string): string;
+    recoverAddressFromSignature(message: string, signature: string, sortAlphabetically?: boolean): string;
     signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
+    isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
     privateKeyToPublicKey(privateKey: string): string;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
 }
@@ -464,7 +468,7 @@ export interface ICredential {
     proof?: {
         type: string;
         nonce: number;
-        signature: string;
+        signature?: string;
         holder: string;
     };
     provider: string;
@@ -518,5 +522,20 @@ export class WebRTCClientV2 {
   * number = no use yet
   * boolean = older than
   */
-export type TCredentialValue = string | string[] | number | boolean;
+export type TCredentialValue = string | string[] | number | boolean | ICompanyInfo;
+
+export interface ICompanyInfo {
+    addressAdditions: string;
+    btwNumber: string;
+    contactEmail: string;
+    contactName: string;
+    contactPhone: string;
+    hashedPublicKey: string;
+    kvkNumber: string;
+    status: boolean;
+    organisationAddress: string;
+    organisationCity: string;
+    organisationName: string;
+    postalCode: string;
+}
 

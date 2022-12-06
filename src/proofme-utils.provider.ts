@@ -5,6 +5,7 @@ import { IRequestedCredentials } from "./interfaces/requestedCredentials.interfa
 import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 import { ProofmeUtils } from "./proofme-utils";
 import { IChallenge } from "./interfaces/challenge.interface";
+import { EClaimType } from "./enums/claimTypes.enum";
 
 @Injectable()
 export class ProofmeUtilsProvider {
@@ -27,7 +28,15 @@ export class ProofmeUtilsProvider {
         return this.proofmeUtils.isValidRequestedCredentials(requestedCredentials, web3Url, claimholderAbi);
     }
 
+    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>  {
+        return this.proofmeUtils.isValidLicense(requestedCredentials, web3Url, claimHolderAbi);
+    }
+
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge  {
         return this.proofmeUtils.generateChallenge(publicKey, did, host, privateKey);
+    }
+
+    async getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>  {
+        return await this.proofmeUtils.getClaim(claimType, contractAddress, web3Url, claimHolderAbi);
     }
 }

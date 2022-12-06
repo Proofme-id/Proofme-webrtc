@@ -18,13 +18,14 @@
         "lint:fix": "eslint . --fix --ext .ts",
         "postbuild": "copyfiles -f src/assets/i18n/*.json dist/web/assets/i18n",
         "prestart": "copyfiles -f src/assets/i18n/*json dist/web/assets/i18n",
-        "clean": "rm -f dist/web/proofmeid-webrtc-web.d.ts && rm -f dist/web/proofmeid-webrtc-web.js"
+        "clean": "rm -f dist/web/proofmeid-webrtc-web.d.ts && rm -f dist/web/proofmeid-webrtc-web.js && rm -f dist/node/proofmeid-webrtc-node.d.ts && rm -f dist/node/proofmeid-webrtc-node.js"
     },
     "dependencies": {
         "@angular-devkit/build-optimizer": "0.1302.1",
         "@angular/core": "13.2.6",
         "babel-loader": "8.2.3",
         "bignumber.js": "9.0.2",
+        "copyfiles": "^2.4.1",
         "rxjs": "7.5.4",
         "uuid": "8.3.2",
         "web3": "1.7.0",
