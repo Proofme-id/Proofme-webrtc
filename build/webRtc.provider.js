@@ -162,7 +162,16 @@ let WebRtcProvider = class WebRtcProvider {
             }
             console.log("Launch websocket - Client URL:", signalingUrl);
             console.log("Launch websocket - Channel:", webRtcConfig.channel);
-            let url = `${signalingUrl}?channel=${webRtcConfig.channel}`;
+            console.log("Launch websocket - Headers:", headers);
+            let url = null;
+            // If it already has queries, append
+            if (signalingUrl.includes("?")) {
+                url = `${signalingUrl}&channel=${webRtcConfig.channel}`;
+                // If it does not yet have queries, start with it
+            }
+            else {
+                url = `${signalingUrl}?channel=${webRtcConfig.channel}`;
+            }
             if (webRtcConfig.data) {
                 url = `${url}&data=${webRtcConfig.data}`;
             }
@@ -207,7 +216,7 @@ let WebRtcProvider = class WebRtcProvider {
                         console.error("Websocket - Message was not JSON");
                         data = {};
                     }
-                    const { type, message, success, uuid, offer, answer, candidate, webRtcConnectionConfig } = data;
+                    const { type, message, success, channelId, offer, answer, candidate, webRtcConnectionConfig } = data;
                     switch (type) {
                         case "error":
                             // On an error
@@ -273,7 +282,7 @@ let WebRtcProvider = class WebRtcProvider {
                                 }
                             }
                             // When the host received an UUID
-                            if (uuid && this.webRtcConfig.isHost) {
+                            if (channelId && this.webRtcConfig.isHost) {
                                 yield this.sendOffer(this.peerConnection, this.wsClient);
                             }
                             break;
@@ -287,7 +296,7 @@ let WebRtcProvider = class WebRtcProvider {
                         case "offer":
                             // If the application is not the host, it receives an offer whenever a client connects.
                             // The client will send an answer back
-                            if (offer && !this.webRtcConfig.isHost) {
+                            if (offer) {
                                 yield this.peerConnection.setRemoteDescription(new wrtc_1.RTCSessionDescription(offer));
                                 const hostAnswer = yield this.peerConnection.createAnswer();
                                 yield this.peerConnection.setLocalDescription(hostAnswer);
@@ -299,12 +308,12 @@ let WebRtcProvider = class WebRtcProvider {
                             break;
                         case "host":
                             // Whenever the host receives a host request back, set the UUID provided
-                            if (uuid && this.webRtcConfig.isHost) {
-                                this.setUuid(uuid);
+                            if (channelId && this.webRtcConfig.isHost) {
+                                this.setUuid(channelId);
                                 if (webRtcConnectionConfig) {
                                     this.webRtcConnectionConfig = webRtcConnectionConfig;
                                 }
-                                yield this.setupPeerconnection(uuid);
+                                yield this.setupPeerconnection(channelId);
                                 this.sendPing();
                             }
                             break;
@@ -383,6 +392,7 @@ let WebRtcProvider = class WebRtcProvider {
                 }));
                 event.channel.onopen = () => {
                     this.receivedActions$.next({ action: "p2pConnected", p2pConnected: true });
+                    this.sendP2PData("clientconnected", { success: true });
                     this.wsClient.close();
                 };
             });
@@ -436,6 +446,7 @@ let WebRtcProvider = class WebRtcProvider {
                 }));
                 event.channel.onopen = () => {
                     this.receivedActions$.next({ action: "p2pConnected", p2pConnected: true });
+                    this.sendP2PData("clientconnected", { success: true });
                     this.wsClient.close();
                 };
             });

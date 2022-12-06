@@ -118,6 +118,7 @@ export class ProofmeUtilsProvider {
     isValidCredentials(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
     getSignature(message: any, privateKey: string): string;
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
+    signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
     isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
@@ -178,7 +179,7 @@ export class SignalServerV2 {
             * @param
             */
         rejectConnection(reason: string, request: any): void;
-        setupP2PConnection(request: request, validSign: boolean, channel: string, originAllowed: boolean, turnExpiration: number, turnUrl: string, turnSecret: string, signalServer: string, requestedCredentials: IRequestedCredentials, actionType: string, data: any): Promise<any>;
+        setupP2PConnection(request: request, validSign: boolean, channel: string, originAllowed: boolean, turnExpiration: number, turnUrl: string, turnSecret: string, signalServer: string, requestedCredentials: IRequestedCredentials, actionType: string, data: any, origin: string): Promise<any>;
         setupWebsocketListeners(connection: IConnectionDetails): void;
 }
 
