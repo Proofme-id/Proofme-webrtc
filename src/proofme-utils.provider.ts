@@ -32,8 +32,8 @@ export class ProofmeUtilsProvider {
         return this.proofmeUtils.isValidRequestedCredentials(requestedCredentials, web3Url, claimholderAbi);
     }
 
-    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>  {
-        return this.proofmeUtils.isValidLicense(requestedCredentials, web3Url, claimHolderAbi);
+    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any, trustedDids: string[]): Promise<boolean>  {
+        return this.proofmeUtils.isValidLicense(requestedCredentials, web3Url, claimHolderAbi, trustedDids);
     }
 
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge  {

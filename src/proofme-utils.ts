@@ -13,6 +13,7 @@ import { IRequestedCredentials } from "./interfaces/requestedCredentials.interfa
 import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "./interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "./smartcontracts/claimHolderAbi";
+import moment from "moment";
 
 export class ProofmeUtils {
 
@@ -584,13 +585,37 @@ export class ProofmeUtils {
         }
     }
     
-    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any) {
+    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any, trustedDids: string[]) {
         const organisationDid = requestedCredentials.proof.holder;
-        const credentials: ICredential = await this.getClaim(EClaimType.COMPANY_INFO, organisationDid, web3Url, claimHolderAbi);
-        const status = (credentials?.credentialSubject?.credential?.value as ICompanyInfo)?.status;
-        if (status) {
-            return status === true;
+        const organisationClaimCredentials: ICredential = await this.getClaim(EClaimType.COMPANY_INFO, organisationDid, web3Url, claimholderAbi);
+
+        if (organisationClaimCredentials?.proof?.signature) {
+            // Step 1: Check if status is true
+            const activeLicense = (organisationClaimCredentials?.credentialSubject?.credential?.value as ICompanyInfo)?.status === true;
+
+            // Step 2: Check if the issuer also has management key permission on the provided did
+            const organisationClaimCredentialsCopy: IRequestedCredentials = JSON.parse(JSON.stringify(organisationClaimCredentials));
+            delete organisationClaimCredentialsCopy.proof.signature;
+            const publicKey = this.recoverAddressFromSignature(JSON.stringify(organisationClaimCredentialsCopy), organisationClaimCredentials.proof.signature, true);
+            const web3 = new Web3(web3Url);
+            const issuerDid = organisationClaimCredentials.issuer.id.split(":")[2];
+            const claimHolderContract = new web3.eth.Contract(claimholderAbi, issuerDid);
+            const keccak256OrganisationKey = this.getSha3Key(publicKey, web3);
+            const keyPurpose = await this.getKeyPurpose(claimHolderContract, keccak256OrganisationKey) as EDIDAccessLevel;
+            const isContractDeployer = keyPurpose === EDIDAccessLevel.MANAGEMENT_KEY;
+
+            // Step 3: Check if the publickey of the signature is also the holder
+            const isHolder = organisationClaimCredentials.proof.holder === publicKey;
+
+            // Step 4: Check if the issuer is inside the list we trust
+            const isTrusted = trustedDids.includes(issuerDid);
+
+            // Step 5: Check if license expiration date has been reached
+            const isExpired = moment(moment()).isAfter(moment(organisationClaimCredentials.expirationDate));
+            console.log(`Library isValidLicense - Checking issuer did ${issuerDid} active license ${activeLicense} key purpose ${keyPurpose} is holder ${isHolder} is trusted ${isTrusted}`);
+            return activeLicense && isContractDeployer && isHolder && isTrusted && !isExpired;
         } else {
+            console.log("Library - Wanted to check active license but proof did not have signature");
             return false;
         }
     }
