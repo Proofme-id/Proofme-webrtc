@@ -28,7 +28,7 @@ export class SignalingServer {
             return {
                 iceCandidatePoolSize: 5,
                 iceServers: [{
-                    urls: [this.rtcConnectionConfig.turnUrl],
+                    urls: this.rtcConnectionConfig.turnUrl,
                     credential,
                     username,
                 }],
@@ -36,7 +36,7 @@ export class SignalingServer {
         } else if (this.rtcConnectionConfig.stunEnabled) {
             return {
                 iceServers: [{
-                    urls: [this.rtcConnectionConfig.stunUrl],
+                    urls: this.rtcConnectionConfig.stunUrl,
                 }],
             } as RTCConfiguration;
         }

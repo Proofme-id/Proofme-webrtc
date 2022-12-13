@@ -68,7 +68,8 @@ export class SignalServerV2 {
         signalServer: string,
         requestedCredentials: IRequestedCredentials,
         actionType: string,
-        data: any
+        data: any,
+        origin: string
     ): Promise<any> {
         /**
          * Since all is well, we accept the connection
@@ -81,18 +82,18 @@ export class SignalServerV2 {
          * Setup default values upon connect
          */
         connection.uuid = uuidv4(); // Unique identifier for the client
-        connection.did = validSign ? request.httpRequest.headers.did.toString() : null; // When authenticated: didAddress
-        connection.publicKey = validSign ? request.httpRequest.headers.publickey.toString() : null; // When authenticated: publicKey
+        connection.did = validSign ? (request?.resourceURL?.query as any)?.did?.toString() : null; // When authenticated: didAddress
+        connection.publicKey = validSign ? (request?.resourceURL?.query as any)?.publickey?.toString() : null; // When authenticated: publicKey
         connection.authenticated = validSign; // true or false
         connection.channel = channel; // connection or client.uuid connected to
 
         this.setupWebsocketListeners(connection);
 
         // Host
-        if ((request.origin === "http://validator" && validSign && channel === null) || (originAllowed && channel === null)) {
+        if ((origin === "validator" && validSign && channel === null) || (originAllowed && channel === null)) {
             // connection is verified!
             connection.host = true;
-            connection.origin = request.origin;
+            connection.origin = origin;
             const webRtcConfig = getRTCConnectionConfig("host", turnExpiration, turnSecret, turnUrl);
             console.log("Library - Host waiting for connection");
             this.sendTo(connection, {
@@ -101,9 +102,9 @@ export class SignalServerV2 {
                 message: `Host initialised ${connection.uuid}`,
                 channelId: connection.uuid,
                 signalServer,
-                ...(request.origin === "http://validator" && { webRtcConnectionConfig: webRtcConfig })
+                ...(origin === "validator" && { webRtcConnectionConfig: webRtcConfig })
             });
-            if (request.origin !== "http://validator") {
+            if (origin !== "validator") {
                 connection.webRtcClient = new WebRTCClientV2(webRtcConfig, requestedCredentials, connection, actionType, data);
                 await connection.webRtcClient.setupPeerconnection(connection.uuid);
             }
@@ -125,7 +126,7 @@ export class SignalServerV2 {
                     channelId: channel,
                     webRtcConnectionConfig: webRtcConfig
                 });
-                if (hostChannel.origin !== "http://validator") {
+                if (hostChannel.origin !== "validator") {
                     hostChannel.webRtcClient.setClientChannel(connection);
                 }
             } else {
@@ -172,7 +173,7 @@ export class SignalServerV2 {
                     // The client sends an offer to the host.
                     if (!connection.host && connection.channel) {
                         const hostChannel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid && conn.host === true);
-                        if (hostChannel.origin === "http://validator") {
+                        if (hostChannel.origin === "validator") {
                             this.sendTo(hostChannel, {
                                 type: "offer",
                                 success: true,
@@ -189,7 +190,7 @@ export class SignalServerV2 {
                     break;
                 case "answer":
                     // The host responds with an answer for the client.
-                    if (connection.host && connection.channel && connection.origin === "http://validator") {
+                    if (connection.host && connection.channel && connection.origin === "validator") {
                         const clientChannel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid);
                         this.sendTo(clientChannel, {
                             type: "answer",
@@ -205,7 +206,7 @@ export class SignalServerV2 {
                     // Host and Client share candidate.
                     if (connection.channel) {
                         const channel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid);
-                        if (channel.origin === "http://validator" || connection.origin === "http://validator") {
+                        if (channel.origin === "validator" || connection.origin === "validator") {
                             this.sendTo(channel, {
                                 type: "candidate",
                                 success: true,

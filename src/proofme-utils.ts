@@ -564,7 +564,7 @@ export class ProofmeUtils {
     }
 
     async isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean> {
-        if (requestedCredentials.proof) {
+        if (requestedCredentials?.proof?.signature) {
             // Make a copy since we delete the signature of the object; otherwhise we can only check it once and it's gone forever
             const requestedCredentialsCopy: IRequestedCredentials = JSON.parse(JSON.stringify(requestedCredentials));
             delete requestedCredentialsCopy.proof.signature;
@@ -579,7 +579,7 @@ export class ProofmeUtils {
             const keyPurpose = await this.getKeyPurpose(claimHolderContract, keccak256OrganisationKey) as EDIDAccessLevel;
             return (keyPurpose === EDIDAccessLevel.MANAGEMENT_KEY || keyPurpose === EDIDAccessLevel.ACTION_KEY);
         } else {
-            console.error("Requested Credentials doesn't have any proof to check");
+            console.error("Requested Credentials doesn't have a signature in the proof. Not checking");
             return false;
         }
     }

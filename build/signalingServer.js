@@ -21,10 +21,12 @@ class SignalingServer {
             const expiration = this.rtcConnectionConfig.turnExpiration;
             const username = `${time + expiration}:${type}`;
             const credential = crypto.createHmac("sha1", this.rtcConnectionConfig.turnSecret).update(username.toString()).digest("base64");
+            console.log("Library - Username", username);
+            console.log("Library - Credential", credential);
             return {
                 iceCandidatePoolSize: 5,
                 iceServers: [{
-                        urls: [this.rtcConnectionConfig.turnUrl],
+                        urls: this.rtcConnectionConfig.turnUrl,
                         credential,
                         username,
                     }],
@@ -33,7 +35,7 @@ class SignalingServer {
         else if (this.rtcConnectionConfig.stunEnabled) {
             return {
                 iceServers: [{
-                        urls: [this.rtcConnectionConfig.stunUrl],
+                        urls: this.rtcConnectionConfig.stunUrl,
                     }],
             };
         }

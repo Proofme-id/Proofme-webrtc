@@ -24,6 +24,10 @@ export class ProofmeUtilsProvider {
         return this.proofmeUtils.signCredentialObject(credential, privateKey);
     }
 
+    signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials  {
+        return this.proofmeUtils.signRequestedCredentials(requestedCredentials, did, privateKey);
+    }
+
     async isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>  {
         return this.proofmeUtils.isValidRequestedCredentials(requestedCredentials, web3Url, claimholderAbi);
     }
