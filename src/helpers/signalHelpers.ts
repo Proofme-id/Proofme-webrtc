@@ -19,7 +19,7 @@ export function validChannelId(channelId: string, connections: IConnectionDetail
 /**
  * Returns the configuration for the RTC peerconnection
  */
-export function getRTCConnectionConfig(type: string, turnExpiration: number, turnSecret: string, turnUrl: string): RTCConfiguration {
+export function getRTCConnectionConfig(type: string, turnExpiration: number, turnSecret: string, turnUrl: string | string[]): RTCConfiguration {
     const time = Math.floor(Date.now() / 1000);
     const username = `${time + turnExpiration}:${type}`;
     const credential = crypto.createHmac("sha1", turnSecret).update(username.toString()).digest("base64");
@@ -28,7 +28,7 @@ export function getRTCConnectionConfig(type: string, turnExpiration: number, tur
     return {
         iceCandidatePoolSize: 5,
         iceServers: [{
-            urls: [turnUrl],
+            urls: turnUrl,
             credential,
             username,
         }],
