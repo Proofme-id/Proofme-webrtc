@@ -23,8 +23,6 @@ export function getRTCConnectionConfig(type: string, turnExpiration: number, tur
     const time = Math.floor(Date.now() / 1000);
     const username = `${time + turnExpiration}:${type}`;
     const credential = crypto.createHmac("sha1", turnSecret).update(username.toString()).digest("base64");
-    console.log("Library - Username", username);
-    console.log("Library - Credential", credential);
     return {
         iceCandidatePoolSize: 5,
         iceServers: [{
