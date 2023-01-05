@@ -36,7 +36,7 @@ export class ProofmeUtils {
         if (!result.valid) {
             return result;
         }
-        // Check if the trusted addresses are addressed
+        // Check if the trusted addresses are addresses
         for (const did of trustedDids) {
             if (!web3.utils.isAddress(did)) {
                 console.error(`Trusted party did ${did} is NOT a valid address and is removed.`);
@@ -149,6 +149,10 @@ export class ProofmeUtils {
         let credentialsAmount = 0;
         const invalidCredentials = [];
         for (const [provider,] of Object.entries(credentialObject.credentials)) {
+            // We don't check OWN providers
+            if (provider === "OWN") {
+                continue;
+            }
             // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
             // that specific provider (which we generated the signature over)
             const credentialObjectWithoutProofSignature: ICredentialObject = {
