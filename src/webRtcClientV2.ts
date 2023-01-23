@@ -138,8 +138,4 @@ export class WebRTCClientV2 {
             answer: hostAnswer
         }));
     }
-
-    setClientChannel(channel: IConnectionDetails): void {
-        this.clientChannel = channel;
-    }
 }

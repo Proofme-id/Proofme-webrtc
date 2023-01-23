@@ -5,6 +5,7 @@ import { IRequestedCredentialKey } from "./requestedCredentialKey.interface";
 export interface IRequestedCredentials {
     credentials: IRequestedCredentialKey[];
     description?: string;
+    pgpDecrypt?: boolean;
     purpose?: EProofmeDataPurpose;
     proof?: {
         holder: string;

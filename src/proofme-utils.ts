@@ -49,9 +49,13 @@ export class ProofmeUtils {
             let credentialsAmount = 0;
             const invalidCredentials = [];
             for (const [provider,] of Object.entries(credentialObject.credentials)) {
+                // We don't check own provided credentials
+                if (provider === "OWN" || provider === "ADDITIONAL_INFO") {
+                    continue;
+                }
                 for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
                     credentialsAmount++;
-                    const issuerDidContractAddress = credential.issuer.id.split(":")[2];
+                    const issuerDidContractAddress = (credential as ICredential).issuer.id.split(":")[2];
                     let foundValid = false;
                     let invalidKeyProvider = null;
                     let invalidKeyProviderAllowedKeys = null;
@@ -71,7 +75,7 @@ export class ProofmeUtils {
                             if (claimExpirationDate > new Date()) {
                                 const claimAllowedCredentialKeys = claim.keys;
                                 invalidKeyProviderAllowedKeys = claimAllowedCredentialKeys;
-                                const providerCredentialKey = `${credential.provider}_${currentCredentialKey}`;
+                                const providerCredentialKey = `${(credential as ICredential).provider}_${currentCredentialKey}`;
                                 if (!claimAllowedCredentialKeys.includes(providerCredentialKey)) {
                                     invalidKeyProvider = providerCredentialKey;
                                     break;
@@ -150,7 +154,7 @@ export class ProofmeUtils {
         const invalidCredentials = [];
         for (const [provider,] of Object.entries(credentialObject.credentials)) {
             // We don't check OWN providers
-            if (provider === "OWN") {
+            if (provider === "OWN" || provider === "ADDITIONAL_INFO") {
                 continue;
             }
             // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
@@ -167,7 +171,7 @@ export class ProofmeUtils {
             if (correctUserSignature) {
                 for (const [, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
                     credentialsAmount++;
-                    if (!credential.version) {
+                    if (!(credential as ICredential).version) {
                         invalidCredentials.push({
                             credential,
                             code: 8,
@@ -175,7 +179,7 @@ export class ProofmeUtils {
                         });
                         continue;
                     }
-                    const credentialExpirationDate = new Date(credential.expirationDate);
+                    const credentialExpirationDate = new Date((credential as ICredential).expirationDate);
                     const now = new Date();
                     if (now > credentialExpirationDate) {
                         invalidCredentials.push({
@@ -199,15 +203,15 @@ export class ProofmeUtils {
                     const correctIssuerSignature = this.issuerCredentialSignatureWrong(credential, web3Node);
                     if (correctIssuerSignature) {
                         // Check every credential DID contract if the holder belongs to that DID
-                        const issuerHolderKey = credential.proof.holder;
-                        const issuerDidContractAddress = credential.issuer.id.split(":")[2];
+                        const issuerHolderKey = (credential as ICredential).proof.holder;
+                        const issuerDidContractAddress = (credential as ICredential).issuer.id.split(":")[2];
                         const issuerCorrectDid = await this.didContractKeyWrong(web3Node, web3Url, claimHolderAbi, issuerHolderKey, issuerDidContractAddress, checkedDid);
                         if (issuerCorrectDid) {
                             const userHolderKey = credentialObject.credentials[provider].proof.holder;
-                            const userDidContractAddress = credential.id.split(":")[2];
+                            const userDidContractAddress = (credential as ICredential).id.split(":")[2];
                             const userCorrectDid = await this.didContractKeyWrong(web3Node, web3Url, claimHolderAbi, userHolderKey, userDidContractAddress, checkedDid);
                             if (userCorrectDid) {
-                                if (!livenessCheckRequired || (credential.verified === undefined || credential.verified === true)) {
+                                if (!livenessCheckRequired || ((credential as ICredential).verified === undefined || (credential as ICredential).verified === true)) {
                                     validCredentialsAmount++;
                                 } else {
                                     invalidCredentials.push({
@@ -362,7 +366,7 @@ export class ProofmeUtils {
             const reOrderedCredentials = {};
             // Loop the credential keys one by one and re order the credentials so its alphabetical
             for (const credentialKey of credentialKeys) {
-                const reOrderedCredential = this.reOrderCredential(credentialObject.credentials[provider].credentials[credentialKey]);
+                const reOrderedCredential = this.reOrderCredential(credentialObject.credentials[provider].credentials[credentialKey] as ICredential);
                 reOrderedCredentials[credentialKey] = reOrderedCredential;
             }
             credentialObject.credentials[provider].proof = this.reOrderCredentialProof(credentialObject.credentials[provider].proof);

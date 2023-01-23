@@ -21,8 +21,6 @@ class SignalingServer {
             const expiration = this.rtcConnectionConfig.turnExpiration;
             const username = `${time + expiration}:${type}`;
             const credential = crypto.createHmac("sha1", this.rtcConnectionConfig.turnSecret).update(username.toString()).digest("base64");
-            console.log("Library - Username", username);
-            console.log("Library - Credential", credential);
             return {
                 iceCandidatePoolSize: 5,
                 iceServers: [{

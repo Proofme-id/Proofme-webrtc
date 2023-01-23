@@ -127,7 +127,8 @@ export class SignalServerV2 {
                     webRtcConnectionConfig: webRtcConfig
                 });
                 if (hostChannel.origin !== "validator") {
-                    hostChannel.webRtcClient.setClientChannel(connection);
+                    hostChannel.webRtcClient.clientChannel = connection;
+                    hostChannel.webRtcClient.data = { ...hostChannel.webRtcClient.data, clientData: data };
                 }
             } else {
                 connection.close();
