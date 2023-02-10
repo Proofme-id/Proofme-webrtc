@@ -1,6 +1,6 @@
 export interface IWebRTCConfig {
     signalingUrl: string;
-    isHost: boolean;
+    isHost?: boolean;
     channel?: string;
     data?: any;
 }

@@ -24,3 +24,4 @@ export { EProofmeDataStorage } from "./enums/proofmeDataStorage";
 export { EProofType } from "./enums/proofType.enum";
 export { EWebsocketReadyState } from "./enums/websocketReadyState.enum";
 export { checkKeyForDid } from "./utils/smartContracts/smartContractUtils"
+export { IAdditionalInfo } from "./interfaces/additional-info.interface";

@@ -58,7 +58,7 @@ let WebRtcProvider = class WebRtcProvider {
      */
     sendP2PData(action, data) {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
-            console.log(`Library - Sending action '${action}' with data:`, data);
+            console.log(`Library - Sending action '${action}'`);
             this.dataChannel.send(JSON.stringify(Object.assign({ action }, data)));
         }
         else {

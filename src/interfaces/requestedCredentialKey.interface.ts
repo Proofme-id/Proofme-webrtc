@@ -1,5 +1,7 @@
+import { IAdditionalInfo } from "./additional-info.interface";
+
 export interface IRequestedCredentialKey {
-    key: string;
+    key: string | IAdditionalInfo[];
     provider: string | string[];
     name?: string;
     required: boolean;

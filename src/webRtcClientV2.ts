@@ -106,7 +106,7 @@ export class WebRTCClientV2 {
      */
      sendP2PData(action: string, data: any): void {
         if (this.dataChannel && this.dataChannel.readyState === "open") {
-            console.log(`Library - Sending action '${action}' with data:`, data);
+            console.log(`Library - Sending action '${action}'`);
             this.dataChannel.send(JSON.stringify({ action, ...data }));
         } else {
             console.error(`Library - Attempted to send data with action ${action} but data channel is not open`);
