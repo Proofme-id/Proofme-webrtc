@@ -207,7 +207,7 @@ export interface IConnectionDetails extends connection {
 
 export interface IWebRTCConfig {
     signalingUrl: string;
-    isHost: boolean;
+    isHost?: boolean;
     channel?: string;
     data?: any;
 }
@@ -346,7 +346,7 @@ export interface ICheckedDid {
 }
 
 export interface IRequestedCredentialKey {
-    key: string;
+    key: string | IAdditionalInfo[];
     provider: string | string[];
     name?: string;
     required: boolean;
@@ -371,7 +371,7 @@ export interface ICredentialObject {
 
 export interface ICredentialKeyObject {
     credentials: {
-        [key: string]: ICredential | ICredentialOwnProvided;
+        [key: string]: ICredential | ICredentialOwnProvided | IAdditionalInfo;
     };
     proof: IProof;
 }
@@ -433,6 +433,12 @@ export const enum EWebsocketReadyState {
 }
 
 export function checkKeyForDid(web3Url: string, contractAddress: string, publicKey: string, keyToCheck: EDIDAccessLevel): Promise<boolean>;
+
+export interface IAdditionalInfo {
+    language?: string;
+    question?: string;
+    answer?: string;
+}
 
 export interface IChallenge {
     did: string;

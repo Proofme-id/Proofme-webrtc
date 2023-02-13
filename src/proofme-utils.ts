@@ -2,6 +2,7 @@ import Web3 from "web3";
 import { EClaimType } from "./enums/claimTypes.enum";
 import { EDIDAccessLevel } from "./enums/didAccessLevel.enum";
 import { ESignatureTypes } from "./enums/signatureTypes.enum";
+import { IAdditionalInfo } from "./interfaces/additional-info.interface";
 import { IChallenge } from "./interfaces/challenge.interface";
 import { ICheckedDid } from "./interfaces/checkedDid.interface";
 import { ISignedContent } from "./interfaces/claims/signedContent.interface";
@@ -9,6 +10,7 @@ import { ICompanyInfo } from "./interfaces/companyInfo.interface";
 import { ICredential } from "./interfaces/credential.interface";
 import { ICredentialObject } from "./interfaces/credentialsObject.interface";
 import { IProof } from "./interfaces/proof.interface";
+import { IRequestedCredentialKey } from "./interfaces/requestedCredentialKey.interface";
 import { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
 import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "./interfaces/validatedCredentials.interface";
@@ -500,28 +502,39 @@ export class ProofmeUtils {
         }
         // Loop all requested credentials
         for (const requestedCredential of requestedCredentials.credentials) {
-            let isInsideMinimumRequired = false;
-            if (requestedCredentials.minimumRequired) {
-                isInsideMinimumRequired = !!requestedCredentials.minimumRequired.data.find(x => x === requestedCredential.key);
-            }
-            // Check only required keys
-            if (requestedCredential.required && !isInsideMinimumRequired) {
-                if (!Array.isArray(requestedCredential.provider)) {
-                    requestedCredential.provider = [requestedCredential.provider];
-                }
-                let found = false;
-                for (const provider of requestedCredential.provider) {
-                    if (credentials.credentials[provider] &&
-                        credentials.credentials[provider].credentials &&
-                        credentials.credentials[provider].credentials[requestedCredential.key]
-                    ) {
-                        // All good, found!
-                        found = true;
+            if (requestedCredential.required && requestedCredential.provider === "ADDITIONAL_INFO") {
+                const objectKeys = Object.keys(credentials.credentials[requestedCredential.provider].credentials);
+                for (const key of objectKeys) {
+                    const additionalInfo = credentials.credentials[requestedCredential.provider].credentials[key] as IRequestedCredentialKey;
+                    if (additionalInfo.required && (additionalInfo.key as IAdditionalInfo[]).find(x => !x.answer)) {
+                        checkResult.success = false;
+                        checkResult.missingKeys.push(additionalInfo);
                     }
                 }
-                if (!found) {
-                    checkResult.success = false;
-                    checkResult.missingKeys.push(requestedCredential);
+            } else {
+                let isInsideMinimumRequired = false;
+                if (requestedCredentials.minimumRequired) {
+                    isInsideMinimumRequired = !!requestedCredentials.minimumRequired.data.find(x => x === requestedCredential.key);
+                }
+                // Check only required keys
+                if (requestedCredential.required && !isInsideMinimumRequired) {
+                    if (!Array.isArray(requestedCredential.provider)) {
+                        requestedCredential.provider = [requestedCredential.provider];
+                    }
+                    let found = false;
+                    for (const provider of requestedCredential.provider) {
+                        if (credentials.credentials[provider] &&
+                            credentials.credentials[provider].credentials &&
+                            credentials.credentials[provider].credentials[requestedCredential.key as string]
+                        ) {
+                            // All good, found!
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        checkResult.success = false;
+                        checkResult.missingKeys.push(requestedCredential);
+                    }
                 }
             }
         }
