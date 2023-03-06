@@ -42,8 +42,12 @@ export class SignalServerV2 {
      * @param channel
      * @param message
      */
-    public sendTo(channel, message) {
-        channel.sendUTF(JSON.stringify(message));
+    public sendTo(connection: IConnectionDetails, message: any) {
+        if (connection) {
+            connection.sendUTF(JSON.stringify(message));
+        } else {
+            console.error("Tried to send this over undefined connection:", message);
+        }
     }
 
     /**
@@ -174,16 +178,20 @@ export class SignalServerV2 {
                     // The client sends an offer to the host.
                     if (!connection.host && connection.channel) {
                         const hostChannel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid && conn.host === true);
-                        if (hostChannel.origin === "validator") {
-                            this.sendTo(hostChannel, {
-                                type: "offer",
-                                success: true,
-                                message: "Client shared an offer",
-                                offer
-                            });
+                        if (hostChannel) {
+                            if (hostChannel.origin === "validator") {
+                                this.sendTo(hostChannel, {
+                                    type: "offer",
+                                    success: true,
+                                    message: "Client shared an offer",
+                                    offer
+                                });
+                            } else {
+                                await hostChannel.webRtcClient.setRemoteDescription(offer);
+                                await hostChannel.webRtcClient.sendAnswer();
+                            }
                         } else {
-                            await hostChannel.webRtcClient.setRemoteDescription(offer);
-                            await hostChannel.webRtcClient.sendAnswer();
+                            console.error("Couldn't find connection on uuid:", connection.uuid);
                         }
                     } else {
                         connection.close()
@@ -193,12 +201,16 @@ export class SignalServerV2 {
                     // The host responds with an answer for the client.
                     if (connection.host && connection.channel && connection.origin === "validator") {
                         const clientChannel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid);
-                        this.sendTo(clientChannel, {
-                            type: "answer",
-                            success: true,
-                            message: "Client shared an answer",
-                            answer
-                        });
+                        if (clientChannel) {
+                            this.sendTo(clientChannel, {
+                                type: "answer",
+                                success: true,
+                                message: "Client shared an answer",
+                                answer
+                            });
+                        } else {
+                            console.error("Couldn't find connection on uuid:", connection.uuid);
+                        }
                     } else {
                         connection.close()
                     }
@@ -207,15 +219,19 @@ export class SignalServerV2 {
                     // Host and Client share candidate.
                     if (connection.channel) {
                         const channel: IConnectionDetails = this.wsServer.connections.find((conn: IConnectionDetails) => conn.channel === connection.uuid);
-                        if (channel.origin === "validator" || connection.origin === "validator") {
-                            this.sendTo(channel, {
-                                type: "candidate",
-                                success: true,
-                                message: "Candidate shared",
-                                candidate
-                            });
+                        if (channel) {
+                            if (channel.origin === "validator" || connection.origin === "validator") {
+                                this.sendTo(channel, {
+                                    type: "candidate",
+                                    success: true,
+                                    message: "Candidate shared",
+                                    candidate
+                                });
+                            } else {
+                                channel.webRtcClient.addCandidate(candidate);
+                            }
                         } else {
-                            channel.webRtcClient.addCandidate(candidate);
+                            console.error("Couldn't find connection on uuid:", connection.uuid);
                         }
                     } else {
                         connection.close();
