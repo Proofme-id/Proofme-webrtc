@@ -172,7 +172,7 @@ export class SignalServerV2 {
             * @param channel
             * @param message
             */
-        sendTo(channel: any, message: any): void;
+        sendTo(connection: IConnectionDetails, message: any): void;
         /**
             * Send error
             * @param reason
