@@ -3,4 +3,5 @@ export interface IWebRTCConfig {
     isHost?: boolean;
     channel?: string;
     data?: any;
+    keepalive?: boolean;
 }
