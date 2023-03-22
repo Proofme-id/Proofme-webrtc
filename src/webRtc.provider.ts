@@ -169,6 +169,9 @@ export class WebRtcProvider {
         if (webRtcConfig.data) {
             url = `${url}&data=${webRtcConfig.data}`;
         }
+        if (webRtcConfig.keepalive) {
+            url = `${url}&keepalive=${webRtcConfig.keepalive}`;
+        }
         this.wsClient = new w3cwebsocket(url, null, null, headers);
         // So if there is not a success connection after 10 seconds, close the socket and send an error
         this.connectionTimeout = setTimeout(() => {
