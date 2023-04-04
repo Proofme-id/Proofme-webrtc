@@ -18,6 +18,8 @@ import { claimHolderAbi } from "./smartcontracts/claimHolderAbi";
 
 export class ProofmeUtils {
 
+    excludedCredentialKeys = ["OWN", "ADDITIONAL_INFO", "SIGNATURE"];
+
     async isValidCredentials(
         credentialObject: ICredentialObject,
         web3Url: string,
@@ -52,7 +54,7 @@ export class ProofmeUtils {
             const invalidCredentials = [];
             for (const [provider,] of Object.entries(credentialObject.credentials)) {
                 // We don't check own provided credentials
-                if (provider === "OWN" || provider === "ADDITIONAL_INFO") {
+                if (this.excludedCredentialKeys.includes(provider)) {
                     continue;
                 }
                 for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
@@ -156,7 +158,7 @@ export class ProofmeUtils {
         const invalidCredentials = [];
         for (const [provider,] of Object.entries(credentialObject.credentials)) {
             // We don't check OWN providers
-            if (provider === "OWN" || provider === "ADDITIONAL_INFO") {
+            if (this.excludedCredentialKeys.includes(provider)) {
                 continue;
             }
             // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
@@ -512,12 +514,8 @@ export class ProofmeUtils {
                     }
                 }
             } else {
-                let isInsideMinimumRequired = false;
-                if (requestedCredentials.minimumRequired) {
-                    isInsideMinimumRequired = !!requestedCredentials.minimumRequired.data.find(x => x === requestedCredential.key);
-                }
                 // Check only required keys
-                if (requestedCredential.required && !isInsideMinimumRequired) {
+                if (requestedCredential.required) {
                     if (!Array.isArray(requestedCredential.provider)) {
                         requestedCredential.provider = [requestedCredential.provider];
                     }
@@ -536,27 +534,6 @@ export class ProofmeUtils {
                         checkResult.missingKeys.push(requestedCredential);
                     }
                 }
-            }
-        }
-        // Check if the minimum required amount has been reached
-        if (requestedCredentials.minimumRequired) {
-            const providers = Object.keys(credentials.credentials);
-            const credentialKeys = requestedCredentials.minimumRequired.data;
-            let foundCredentials = 0;
-            for (const provider of providers) {
-                for (const credentialKey of credentialKeys) {
-                    if (credentials.credentials[provider] &&
-                        credentials.credentials[provider].credentials &&
-                        credentials.credentials[provider].credentials[credentialKey]
-                    ) {
-                        // All good, found!
-                        foundCredentials++;
-                    }
-                }
-            }
-            if (foundCredentials < requestedCredentials.minimumRequired.amount) {
-                checkResult.success = false;
-                checkResult.missingMessage = `Check the minimumRequired array. Found ${foundCredentials} items and required amount ${requestedCredentials.minimumRequired.amount}`
             }
         }
         return checkResult;

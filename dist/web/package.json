@@ -1,6 +1,6 @@
 {
     "name": "@proofmeid/webrtc-web",
-    "version": "0.0.184",
+    "version": "0.0.185",
     "description": "WebRTC + Signaling Server",
     "author": "Proofme.ID",
     "license": "ISC",

@@ -126,6 +126,7 @@ export class ProofmeUtilsProvider {
 }
 
 export class ProofmeUtils {
+    excludedCredentialKeys: string[];
     isValidCredentials(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
     checkCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
     userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
@@ -380,17 +381,12 @@ export interface ICredentialKeyObject {
 export interface IRequestedCredentials {
     credentials: IRequestedCredentialKey[];
     description?: string;
-    pgpDecrypt?: boolean;
     purpose?: EProofmeDataPurpose;
     proof?: {
         holder: string;
         nonce: number;
         signature?: string;
         type: string;
-    };
-    minimumRequired?: {
-        data: string[];
-        amount: number;
     };
     requester?: string;
     storage?: EProofmeDataStorage;
