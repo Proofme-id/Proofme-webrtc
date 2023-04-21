@@ -43,4 +43,8 @@ export class ProofmeUtilsProvider {
     async getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>  {
         return await this.proofmeUtils.getClaim(claimType, contractAddress, web3Url, claimHolderAbi);
     }
+
+    getContractAddressFromDid(did: string): string  {
+        return this.proofmeUtils.getContractAddressFromDid(did);
+    }
 }

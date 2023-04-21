@@ -123,6 +123,7 @@ export class ProofmeUtilsProvider {
     isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
     getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>;
+    getContractAddressFromDid(did: string): string;
 }
 
 export class ProofmeUtils {
@@ -153,11 +154,12 @@ export class ProofmeUtils {
     getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>;
     requestedCredentialsCorrect(credentials: ICredentialObject, requestedCredentials: IRequestedCredentials): IRequestedCredentialsCheckResult;
     recoverAddressFromSignature(message: string, signature: string, sortAlphabetically?: boolean): string;
-    signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials;
+    signRequestedCredentials(requestedCredentials: IRequestedCredentials, publicKey: string, privateKey: string): IRequestedCredentials;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
     isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
     privateKeyToPublicKey(privateKey: string): string;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
+    getContractAddressFromDid(did: string): string;
 }
 
 export class SignalServerV2 {
@@ -382,6 +384,7 @@ export interface IRequestedCredentials {
     credentials: IRequestedCredentialKey[];
     description?: string;
     purpose?: EProofmeDataPurpose;
+    id?: string;
     proof?: {
         holder: string;
         nonce: number;

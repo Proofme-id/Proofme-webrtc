@@ -6,6 +6,7 @@ export interface IRequestedCredentials {
     credentials: IRequestedCredentialKey[];
     description?: string;
     purpose?: EProofmeDataPurpose;
+    id?: string;
     proof?: {
         holder: string;
         nonce: number;

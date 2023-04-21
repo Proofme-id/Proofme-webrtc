@@ -550,9 +550,9 @@ export class ProofmeUtils {
         
     }
 
-    signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials {
+    signRequestedCredentials(requestedCredentials: IRequestedCredentials, publicKey: string, privateKey: string): IRequestedCredentials {
         requestedCredentials.proof = {
-            holder: did,
+            holder: publicKey,
             nonce: Date.now(),
             type: ESignatureTypes.ECDSA
         }
@@ -570,9 +570,13 @@ export class ProofmeUtils {
             // Recover the public key
             const publicKey = this.recoverAddressFromSignature(JSON.stringify(requestedCredentialsCopy), requestedCredentials.proof.signature, true);
             const web3 = new Web3(web3Url);
-            const did = requestedCredentials.proof.holder;
+            const did = requestedCredentials.id
+            if (publicKey !== requestedCredentials.proof.holder) {
+                console.error(`Recovered address ${publicKey} does not match holder address ${requestedCredentials.proof.holder}`);
+                return false;
+            }
             // Check the access level on the contract
-            const claimHolderContract = new web3.eth.Contract(claimholderAbi, did);
+            const claimHolderContract = new web3.eth.Contract(claimholderAbi, this.getContractAddressFromDid(did));
             const keccak256OrganisationKey = this.getSha3Key(publicKey, web3);
             const keyPurpose = await this.getKeyPurpose(claimHolderContract, keccak256OrganisationKey) as EDIDAccessLevel;
             return (keyPurpose === EDIDAccessLevel.MANAGEMENT_KEY || keyPurpose === EDIDAccessLevel.ACTION_KEY);
@@ -583,8 +587,8 @@ export class ProofmeUtils {
     }
     
     async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any) {
-        const organisationDid = requestedCredentials.proof.holder;
-        const credentials: ICredential = await this.getClaim(EClaimType.COMPANY_INFO, organisationDid, web3Url, claimHolderAbi);
+        const organisationDid = requestedCredentials.id;
+        const credentials: ICredential = await this.getClaim(EClaimType.COMPANY_INFO, this.getContractAddressFromDid(organisationDid), web3Url, claimHolderAbi);
         const status = (credentials?.credentialSubject?.credential?.value as ICompanyInfo)?.status;
         if (status) {
             return status === true;
@@ -611,5 +615,25 @@ export class ProofmeUtils {
             challenge,
             signature
         } as IChallenge
+    }
+
+    getContractAddressFromDid(did: string): string {
+        let contractAddress = did;
+        const splittedDid = did.split(":");
+        if (splittedDid.length === 2) {
+            console.error("Unsupported did:", did);
+            return null;
+        } else if (splittedDid.length === 3) {
+            if (splittedDid[0] !== "did") {
+                console.error("Unsupported did:", did);
+                return null;
+            } else if (splittedDid[1] !== "didux") {
+                console.error("Unsupported chain:", splittedDid[1]);
+                return null;
+            } else {
+                contractAddress = splittedDid[2];
+            }
+        }
+        return contractAddress;
     }
 }
