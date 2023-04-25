@@ -18,7 +18,7 @@ import { claimHolderAbi } from "./smartcontracts/claimHolderAbi";
 
 export class ProofmeUtils {
 
-    excludedCredentialKeys = ["OWN", "ADDITIONAL_INFO", "SIGNATURE"];
+    excludedCredentialProviders = ["OWN", "ADDITIONAL_INFO", "SIGNATURE"];
 
     async isValidCredentials(
         credentialObject: ICredentialObject,
@@ -54,7 +54,7 @@ export class ProofmeUtils {
             const invalidCredentials = [];
             for (const [provider,] of Object.entries(credentialObject.credentials)) {
                 // We don't check own provided credentials
-                if (this.excludedCredentialKeys.includes(provider)) {
+                if (this.excludedCredentialProviders.includes(provider)) {
                     continue;
                 }
                 for (const [currentCredentialKey, credential] of Object.entries(credentialObject.credentials[provider].credentials)) {
@@ -158,7 +158,7 @@ export class ProofmeUtils {
         const invalidCredentials = [];
         for (const [provider,] of Object.entries(credentialObject.credentials)) {
             // We don't check OWN providers
-            if (this.excludedCredentialKeys.includes(provider)) {
+            if (this.excludedCredentialProviders.includes(provider)) {
                 continue;
             }
             // Check the user credentials (for each provider): Reconstruct it so we only have the credentialObject of 
@@ -204,16 +204,16 @@ export class ProofmeUtils {
                         continue;
                     }
                     // Check if the sent credentials were provided by the did of the credential (check the signature of each credential)
-                    const correctIssuerSignature = this.issuerCredentialSignatureWrong(credential, web3Node);
+                    const correctIssuerSignature = this.issuerCredentialSignatureWrong(credential as ICredential, web3Node);
                     if (correctIssuerSignature) {
                         // Check every credential DID contract if the holder belongs to that DID
                         const issuerHolderKey = (credential as ICredential).proof.holder;
                         const issuerDidContractAddress = (credential as ICredential).issuer.id.split(":")[2];
-                        const issuerCorrectDid = await this.didContractKeyWrong(web3Node, web3Url, claimHolderAbi, issuerHolderKey, issuerDidContractAddress, checkedDid);
+                        const issuerCorrectDid = await this.correctDidContractKey(web3Node, web3Url, claimHolderAbi, issuerHolderKey, issuerDidContractAddress, checkedDid);
                         if (issuerCorrectDid) {
                             const userHolderKey = credentialObject.credentials[provider].proof.holder;
                             const userDidContractAddress = (credential as ICredential).id.split(":")[2];
-                            const userCorrectDid = await this.didContractKeyWrong(web3Node, web3Url, claimHolderAbi, userHolderKey, userDidContractAddress, checkedDid);
+                            const userCorrectDid = await this.correctDidContractKey(web3Node, web3Url, claimHolderAbi, userHolderKey, userDidContractAddress, checkedDid);
                             if (userCorrectDid) {
                                 if (!livenessCheckRequired || ((credential as ICredential).verified === undefined || (credential as ICredential).verified === true)) {
                                     validCredentialsAmount++;
@@ -273,8 +273,7 @@ export class ProofmeUtils {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    userCredentialSignatureWrong(holderKey: any, recoveredAddress: string) {
+    userCredentialSignatureWrong(holderKey: string, recoveredAddress: string) {
         if (holderKey !== recoveredAddress) {
             console.error(`User signature of credential ${holderKey} does not match recoveredAddress ${recoveredAddress}`);
             return false;
@@ -283,7 +282,7 @@ export class ProofmeUtils {
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    issuerCredentialSignatureWrong(credential: any, web3Node: any) {
+    issuerCredentialSignatureWrong(credential: ICredential, web3Node: Web3) {
         const issuerSignature = credential.proof.signature;
         const credentialIssuerKey = credential.proof.holder;
         const credentialWithoutIssuerProof = JSON.parse(JSON.stringify(credential));
@@ -296,7 +295,7 @@ export class ProofmeUtils {
         return true;
     }
 
-    async didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean> {
+    async correctDidContractKey(web3Node: Web3, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean> {
         const foundEntry = checkedDid.find(x => x.did == didAddress && x.holderKey === holderKey);
         if (foundEntry) {
             return foundEntry.result;
