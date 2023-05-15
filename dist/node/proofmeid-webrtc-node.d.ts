@@ -127,12 +127,12 @@ export class ProofmeUtilsProvider {
 }
 
 export class ProofmeUtils {
-    excludedCredentialKeys: string[];
+    excludedCredentialProviders: string[];
     isValidCredentials(credentialObject: ICredentialObject, web3Url: string, requestedCredentials: IRequestedCredentials, trustedDids: string[], checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials | IRequestedCredentialsCheckResult>;
     checkCredentials(credentialObject: ICredentialObject, web3Url: string, checkUserNonce: boolean, livenessCheckRequired?: boolean): Promise<IValidatedCredentials>;
-    userCredentialSignatureWrong(holderKey: any, recoveredAddress: string): boolean;
-    issuerCredentialSignatureWrong(credential: any, web3Node: any): boolean;
-    didContractKeyWrong(web3Node: any, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
+    userCredentialSignatureWrong(holderKey: string, recoveredAddress: string): boolean;
+    issuerCredentialSignatureWrong(credential: ICredential, web3Node: Web3): boolean;
+    correctDidContractKey(web3Node: Web3, web3Url: string, claimHolderAbi: any, holderKey: string, didAddress: string, checkedDid: ICheckedDid[]): Promise<boolean>;
     knownAddressesContains(list: any[], sha3Key: string, didContractAddress: string): boolean;
     getSha3Key(key: string, web3: Web3): string;
     getKeyPurpose(keyManagerContract: any, key: string): Promise<EDIDAccessLevel>;

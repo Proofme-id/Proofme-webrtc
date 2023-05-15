@@ -255,8 +255,7 @@ export class ProofmeUtils {
                 });
             }
         }
-        // When the user signature is incorrect we don't validate any more when there is 1 provider so credentialsamount should be more than 0
-        if (credentialsAmount > 0 && validCredentialsAmount === credentialsAmount) {
+        if (validCredentialsAmount === credentialsAmount) {
             return {
                 credentials: credentialObject.credentials as any,
                 valid: true,
