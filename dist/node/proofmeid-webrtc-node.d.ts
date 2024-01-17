@@ -120,7 +120,8 @@ export class ProofmeUtilsProvider {
     signCredentialObject(credential: ICredentialObject, privateKey: string): string;
     signRequestedCredentials(requestedCredentials: IRequestedCredentials, did: string, privateKey: string): IRequestedCredentials;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
-    isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
+    getLicenseClaim(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<ICredential>;
+    isValidLicenseCredentials(credential: ICredential, web3Url: string, claimholderAbi: any): Promise<boolean>;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
     getClaim(claimType: EClaimType, contractAddress: string, web3Url: string, claimHolderAbi: any): Promise<any>;
     getContractAddressFromDid(did: string): string;
@@ -156,7 +157,8 @@ export class ProofmeUtils {
     recoverAddressFromSignature(message: string, signature: string, sortAlphabetically?: boolean): string;
     signRequestedCredentials(requestedCredentials: IRequestedCredentials, publicKey: string, privateKey: string): IRequestedCredentials;
     isValidRequestedCredentials(requestedCredentials: IRequestedCredentials, web3Url: string, claimholderAbi: any): Promise<boolean>;
-    isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<boolean>;
+    getLicenseClaim(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<ICredential>;
+    isValidLicenseCredentials(credential: ICredential, web3Url: string, claimholderAbi: any): Promise<boolean>;
     privateKeyToPublicKey(privateKey: string): string;
     generateChallenge(publicKey: string, did: string, host: string, privateKey: string): IChallenge;
     getContractAddressFromDid(did: string): string;
@@ -449,14 +451,6 @@ export interface IChallenge {
     signature: string;
 }
 
-export enum EDIDAccessLevel {
-    NONE = "0",
-    MANAGEMENT_KEY = "1",
-    ACTION_KEY = "2",
-    CLAIM_SIGNER_KEY = "3",
-    ENCRYPTION_KEY = "4"
-}
-
 export interface ICredential {
     credentialSubject: {
         credential: {
@@ -484,6 +478,14 @@ export interface ICredential {
     verifiedCredential?: boolean;
     verified?: boolean;
     version: string;
+}
+
+export enum EDIDAccessLevel {
+    NONE = "0",
+    MANAGEMENT_KEY = "1",
+    ACTION_KEY = "2",
+    CLAIM_SIGNER_KEY = "3",
+    ENCRYPTION_KEY = "4"
 }
 
 export class WebRTCClientV2 {

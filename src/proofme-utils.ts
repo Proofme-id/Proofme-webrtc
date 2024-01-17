@@ -6,7 +6,6 @@ import { IAdditionalInfo } from "./interfaces/additional-info.interface";
 import { IChallenge } from "./interfaces/challenge.interface";
 import { ICheckedDid } from "./interfaces/checkedDid.interface";
 import { ISignedContent } from "./interfaces/claims/signedContent.interface";
-import { ICompanyInfo } from "./interfaces/companyInfo.interface";
 import { ICredential } from "./interfaces/credential.interface";
 import { ICredentialObject } from "./interfaces/credentialsObject.interface";
 import { IProof } from "./interfaces/proof.interface";
@@ -584,13 +583,45 @@ export class ProofmeUtils {
         }
     }
     
-    async isValidLicense(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any) {
+    async getLicenseClaim(requestedCredentials: IRequestedCredentials, web3Url: string, claimHolderAbi: any): Promise<ICredential> {
         const organisationDid = requestedCredentials.id;
-        const credentials: ICredential = await this.getClaim(EClaimType.COMPANY_INFO, this.getContractAddressFromDid(organisationDid), web3Url, claimHolderAbi);
-        const status = (credentials?.credentialSubject?.credential?.value as ICompanyInfo)?.status;
-        if (status) {
-            return status === true;
+        return await this.getClaim(EClaimType.COMPANY_INFO, this.getContractAddressFromDid(organisationDid), web3Url, claimHolderAbi);
+    }
+
+    async isValidLicenseCredentials(credential: ICredential, web3Url: string, claimholderAbi: any): Promise<boolean> {
+        if (credential?.proof?.signature) {
+            // Make a copy since we delete the signature of the object; otherwhise we can only check it once and it's gone forever
+            const credentialsCopy: ICredential = JSON.parse(JSON.stringify(credential));
+            delete credentialsCopy.proof.signature;
+
+            // Recover the public key
+            const publicKey = this.recoverAddressFromSignature(JSON.stringify(credentialsCopy), credential.proof.signature, true);
+            const web3 = new Web3(web3Url);
+            if (publicKey !== credentialsCopy.proof.holder) {
+                console.error(`Recovered address ${publicKey} does not match holder address ${credentialsCopy.proof.holder}`);
+                return false;
+            }
+
+            // Check the access level on the contract
+            const did = credentialsCopy.issuer.id.replace(/(did:didux|:)/g, "");
+            const claimHolderContract = new web3.eth.Contract(claimholderAbi, did);
+            const keccak256OrganisationKey = this.getSha3Key(publicKey, web3);
+            const keyPurpose = await this.getKeyPurpose(claimHolderContract, keccak256OrganisationKey) as EDIDAccessLevel;
+            if (keyPurpose !== EDIDAccessLevel.MANAGEMENT_KEY && keyPurpose !== EDIDAccessLevel.ACTION_KEY) {
+                console.error(`Keypurpose ${keyPurpose} not MANAGEMENT_KEY or ACTION_KEY`);
+                return false;
+            }
+
+            // Check claim expiration date
+            if (new Date() > new Date(credential.expirationDate)) {
+                console.error(`Claim expired on ${credential.expirationDate}. Please re-new`);
+                return false;
+            }
+
+            // So all checks done! License claim is valid
+            return true;
         } else {
+            console.error("Requested Credentials doesn't have a signature in the proof. Not checking");
             return false;
         }
     }
