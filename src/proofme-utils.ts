@@ -14,6 +14,7 @@ import { IRequestedCredentials } from "./interfaces/requestedCredentials.interfa
 import { IRequestedCredentialsCheckResult } from "./interfaces/requestedCredentialsCheckResult";
 import { IValidatedCredentials } from "./interfaces/validatedCredentials.interface";
 import { claimHolderAbi } from "./smartcontracts/claimHolderAbi";
+import { IOrganisationInfo } from "./interfaces/organisationInfo.interface";
 
 export class ProofmeUtils {
 
@@ -618,10 +619,10 @@ export class ProofmeUtils {
                 return false;
             }
 
-            // So all checks done! License claim is valid
-            return true;
+            // So now it's up to the status. If the status is true, it's valid and false if invalid
+            return (credential.credentialSubject.credential.value as IOrganisationInfo).status
         } else {
-            console.error("Requested Credentials doesn't have a signature in the proof. Not checking");
+            console.error("Requested Credentials doesn't have a signature in the proof. Not checking. Probably this license has not been approved yet? Unapproved licences don't have a proof, only claim info");
             return false;
         }
     }
