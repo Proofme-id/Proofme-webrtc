@@ -18,7 +18,7 @@ import { IOrganisationInfo } from "./interfaces/organisationInfo.interface";
 
 export class ProofmeUtils {
 
-    excludedCredentialProviders = ["OWN", "ADDITIONAL_INFO", "SIGNATURE"];
+    excludedCredentialProviders = ["OWN", "ADDITIONAL_INFO", "SIGNATURE", "ADDRESS"];
 
     async isValidCredentials(
         credentialObject: ICredentialObject,
