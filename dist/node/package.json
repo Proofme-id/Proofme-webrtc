@@ -1,6 +1,6 @@
 {
     "name": "@proofmeid/webrtc-node",
-    "version": "0.0.197",
+    "version": "0.1.1",
     "description": "WebRTC + Signaling Server",
     "author": "Proofme.ID",
     "license": "ISC",
@@ -12,7 +12,7 @@
         "uuid": "8.3.2",
         "web3": "1.7.0",
         "websocket": "1.0.34",
-        "wrtc": "0.4.7"
+        "@roamhq/wrtc": "0.5.1"
     },
     "devDependencies": {
         "@angular/compiler": "13.2.6",
