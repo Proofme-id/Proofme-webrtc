@@ -18,7 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebRtcProvider = void 0;
 const core_1 = require("@angular/core");
 const rxjs_1 = require("rxjs");
-const wrtc_1 = require("wrtc");
+const wrtc_1 = require("@roamhq/wrtc");
 const websocket_1 = require("websocket");
 let WebRtcProvider = class WebRtcProvider {
     constructor() {

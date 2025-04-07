@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { IWebRTCConfig } from "./interfaces/webRtcConfig.interface";
-import { RTCSessionDescription, RTCIceCandidate } from "wrtc";
+import { RTCSessionDescription, RTCIceCandidate } from "@roamhq/wrtc";
 import { w3cwebsocket } from "websocket";
 import { OutgoingHttpHeaders } from "http";
 
