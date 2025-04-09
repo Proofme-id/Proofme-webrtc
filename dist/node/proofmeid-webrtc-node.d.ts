@@ -4,6 +4,7 @@
 //   ../rxjs
 //   ../websocket
 //   ../web3
+//   ../@koush/wrtc
 
 import * as http from "http";
 import { BehaviorSubject } from "rxjs";
@@ -13,6 +14,7 @@ import Web3 from "web3";
 import { Subject } from "rxjs";
 import { request, server as WebSocketServer } from "websocket";
 import { connection } from "websocket";
+import { RTCPeerConnection, RTCDataChannel } from "@koush/wrtc";
 
 export class SignalingServer {
         wsServer: any;

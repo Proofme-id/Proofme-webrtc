@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { RTCIceCandidate, RTCPeerConnection, RTCSessionDescription, RTCDataChannel } from "@roamhq/wrtc";
+import { RTCIceCandidate, RTCPeerConnection, RTCSessionDescription, RTCDataChannel } from "@koush/wrtc";
 import { IConnectionDetails } from "./interfaces/connectionDetails";
 import { IRequestedCredentials } from "./interfaces/requestedCredentials.interface";
 

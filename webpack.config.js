@@ -24,6 +24,7 @@ export default (env) => {
     }).forEach((mod) => {
         externals[mod] = "commonjs " + mod;
     });
+    externals["@koush/wrtc"] = "commonjs @koush/wrtc";
 
     return [
         // Node

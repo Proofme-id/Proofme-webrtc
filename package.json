@@ -23,14 +23,14 @@
     "dependencies": {
         "@angular-devkit/build-optimizer": "0.1302.1",
         "@angular/core": "13.2.6",
+        "@koush/wrtc": "0.5.3",
         "babel-loader": "8.2.3",
         "bignumber.js": "9.0.2",
         "copyfiles": "^2.4.1",
         "rxjs": "7.5.4",
         "uuid": "8.3.2",
         "web3": "1.7.0",
-        "websocket": "1.0.34",
-        "@roamhq/wrtc": "0.5.1"
+        "websocket": "1.0.34"
     },
     "devDependencies": {
         "@angular-devkit/build-angular": "13.2.6",
@@ -38,6 +38,7 @@
         "@angular/compiler-cli": "13.2.6",
         "@ngtools/webpack": "13.2.6",
         "@types/mocha": "10.0.0",
+        "@types/node": "16.11.68",
         "@types/uuid": "8.3.4",
         "@types/websocket": "1.0.5",
         "@types/ws": "8.5.3",
